@@ -6,7 +6,7 @@ export const onRequestGet: PageHandler = async ({ env }) => {
   if (!env.DB) return errorResponse('資料庫尚未設定。', 503, 'database-not-configured')
   try {
     const result = await env.DB.prepare(`
-      SELECT id, name, city, district, region, address, latitude, longitude,
+      SELECT id, name, city, district, region, address, phone, latitude, longitude,
         cap_policy, restrictions, source_type, source_url, last_verified,
         notes, created_at, updated_at
       FROM locations

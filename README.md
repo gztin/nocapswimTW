@@ -67,7 +67,8 @@ functions/
 
 migrations/
 ├── 0001_initial.sql
-└── 0002_seed_locations.sql
+├── 0002_seed_locations.sql       # 歷史 migration，保留不改寫
+└── 0003_replace_sample_seed_add_phone_and_rate_limit.sql
 ```
 
 搜尋、地區與視圖會同步到 URL query，例如 `?view=map&region=north&q=台北`，方便分享目前的篩選結果。
@@ -102,7 +103,7 @@ Cloudflare Pages 的 Variables／Secrets 需要設定：
 
 `wrangler.toml` 的 `DB` binding 名稱必須維持為 `DB`。若使用 Cloudflare Dashboard 綁定 D1，也請使用相同的 binding name。
 
-目前 `0002_seed_locations.sql` 會將工作樹中既有的四筆公開地點寫入 D1；前台 production 只讀 `/api/locations`，不會直接載入 `src/data/locations.ts`，也不會載入前端假資料。
+`0003_replace_sample_seed_add_phone_and_rate_limit.sql` 會移除原本四筆範例資料，改以附件整理的 35 筆飯店資料作為基礎清單，並新增電話欄位與投稿頻率限制表。`0002_seed_locations.sql` 是已存在的歷史 migration，不直接改寫；新資料庫依序套用後，最終資料仍是 35 筆。前台 production 只讀 `/api/locations`，不會直接載入 `src/data/locations.ts`，也不會載入前端假資料。
 
 部署 Pages：
 
@@ -118,6 +119,7 @@ npm run deploy
 
 - `GET /api/locations`
 - `POST /api/submissions`
+- `POST /api/submissions/bulk`
 
 管理 API 需要 admin cookie：
 
@@ -129,7 +131,13 @@ npm run deploy
 
 管理者由 `/admin` 進入；未登入會導向 `/admin/login`。核准新增地點時可在詳情頁補上 latitude／longitude，核准既有地點則更新對應 location，不會建立重複資料。
 
-投稿流程會在 server side 驗證欄位、長度、網址、Email、投稿類型與 Turnstile token；新增地點也會做 normalize 後的名稱／地址相似檢查。所有新投稿一律由 server 強制寫成 `pending`。
+投稿流程會在 server side 驗證欄位、長度、網址、Email、投稿類型與 Turnstile token；新增地點也會做 normalize 後的名稱／地址相似檢查。所有新投稿一律由 server 強制寫成 `pending`。批次投稿最多 50 筆、request body 最多 2 MiB；單筆投稿 request body 最多 32 KiB。瀏覽器端的 CSV／JSON 檔案最多 1 MiB，且每個 IP 每小時最多 5 次投稿請求。production 需要有效的 Turnstile token。
+
+### CSV／JSON 批次投稿格式
+
+前台「回報地點」提供「上傳 CSV／JSON」方式。JSON 可使用資料陣列，或使用 `{ "schema_version": 1, "locations": [...] }` 外層格式；CSV 第一列必須是欄位名稱。
+
+必要欄位為 `name`、`address`、`region`。可選欄位為 `city`、`district`、`phone`、`latitude`、`longitude`、`capPolicy`、`restrictions`、`sourceType`、`sourceUrl`、`notes`。附件使用的 `swim_cap_policy`、`source_type`、`website` 欄位也會自動轉換。檔案資料會先在瀏覽器解析並顯示逐列格式檢查結果，通過後才送到批次投稿 API。
 
 ## 資料與地圖提醒
 

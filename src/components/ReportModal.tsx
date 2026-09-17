@@ -1,9 +1,10 @@
 import { CheckCircle2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { ApiError, createSubmission } from '../api/client'
+import { ApiError, createBulkSubmissions, createSubmission } from '../api/client'
+import { BulkSubmissionPanel } from './BulkSubmissionPanel'
 import type { CapPolicy, PoolLocation, Region, SourceType } from '../types/location'
 import { CAP_POLICY_LABELS, REGION_LABELS, SOURCE_TYPE_LABELS } from '../types/location'
-import type { ReportType, SubmissionPayload } from '../types/submission'
+import type { BulkSubmissionPayload, ReportType, SubmissionPayload } from '../types/submission'
 import { REPORT_TYPE_LABELS } from '../types/submission'
 
 interface ReportModalProps {
@@ -56,7 +57,9 @@ function loadTurnstileScript() {
 
 export function ReportModal({ open, location, onClose }: ReportModalProps) {
   const [reportType, setReportType] = useState<ReportType>('new-location')
+  const [submissionMode, setSubmissionMode] = useState<'manual' | 'bulk'>('manual')
   const [submitted, setSubmitted] = useState(false)
+  const [submittedCount, setSubmittedCount] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
@@ -67,7 +70,9 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
   useEffect(() => {
     if (!open) return
     setReportType(location ? 'policy-change' : 'new-location')
+    setSubmissionMode('manual')
     setSubmitted(false)
+    setSubmittedCount(1)
     setSubmitting(false)
     setSubmitError(null)
     setTurnstileToken(null)
@@ -95,7 +100,7 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
       if (turnstileWidgetId.current !== null) window.turnstile?.remove?.(turnstileWidgetId.current)
       turnstileWidgetId.current = null
     }
-  }, [open])
+  }, [open, submissionMode])
 
   useEffect(() => {
     if (!open) return
@@ -131,6 +136,7 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
       district: String(form.get('district') ?? '') || null,
       region: (String(form.get('region') ?? '') || null) as Region | null,
       address: String(form.get('address') ?? ''),
+      phone: String(form.get('phone') ?? '') || null,
       capPolicy: String(form.get('cap_policy') ?? 'unknown') as CapPolicy,
       restrictions,
       sourceType: String(form.get('source_type') ?? 'community') as SourceType,
@@ -145,13 +151,24 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
     setSubmitError(null)
     try {
       await createSubmission(payload)
+      setSubmittedCount(1)
       setSubmitted(true)
     } catch (error) {
-      if (error instanceof ApiError && error.code === 'possible-duplicate') {
-        setSubmitError(error.message)
-      } else {
-        setSubmitError('送出失敗，請稍後再試。')
-      }
+      setSubmitError(error instanceof ApiError ? error.message : '送出失敗，請稍後再試。')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const submitBulk = async (payload: BulkSubmissionPayload) => {
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const result = await createBulkSubmissions(payload)
+      setSubmittedCount(result.accepted)
+      setSubmitted(true)
+    } catch (error) {
+      setSubmitError(error instanceof ApiError ? error.message : '送出失敗，請稍後再試。')
     } finally {
       setSubmitting(false)
     }
@@ -172,8 +189,8 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
         {submitted ? (
           <div className="report-success">
             <span className="success-icon"><CheckCircle2 size={32} /></span>
-            <h2>感謝你的回報</h2>
-            <p>資料會經過確認後加入或更新地圖。<br />謝謝你一起協助維護 NoCapSwimTW。</p>
+            <h2>{submittedCount > 1 ? '批次投稿已送出' : '感謝你的回報'}</h2>
+            <p>{submittedCount > 1 ? `已收到 ${submittedCount} 筆資料，會逐筆經過確認後加入地圖。` : '資料會經過確認後加入或更新地圖。'}<br />謝謝你一起協助維護 NoCapSwimTW。</p>
             <button className="button button--primary" type="button" onClick={onClose}>
               完成
             </button>
@@ -195,6 +212,42 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
                 <span>{location.address}</span>
               </div>
             )}
+            {!location && (
+              <div className="report-mode-tabs" role="tablist" aria-label="投稿方式">
+                <button
+                  className={submissionMode === 'manual' ? 'is-active' : ''}
+                  type="button"
+                  role="tab"
+                  aria-selected={submissionMode === 'manual'}
+                  onClick={() => {
+                    setSubmissionMode('manual')
+                    setSubmitError(null)
+                  }}
+                >手動填寫</button>
+                <button
+                  className={submissionMode === 'bulk' ? 'is-active' : ''}
+                  type="button"
+                  role="tab"
+                  aria-selected={submissionMode === 'bulk'}
+                  onClick={() => {
+                    setSubmissionMode('bulk')
+                    setSubmitError(null)
+                  }}
+                >上傳 CSV／JSON</button>
+              </div>
+            )}
+
+            {submissionMode === 'bulk' && !location ? (
+              <BulkSubmissionPanel
+                turnstileSiteKey={turnstileSiteKey}
+                turnstileRef={turnstileRef}
+                turnstileToken={turnstileToken}
+                turnstileLoadError={turnstileLoadError}
+                submitting={submitting}
+                submitError={submitError}
+                onSubmit={submitBulk}
+              />
+            ) : (
             <form className="report-form" onSubmit={submitReport}>
               <input type="hidden" name="location_id" value={location?.id ?? ''} />
               {location && (
@@ -246,6 +299,10 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
                       <select name="region" defaultValue="north" required>
                         {regionOptions.map((region) => <option value={region} key={region}>{REGION_LABELS[region]}</option>)}
                       </select>
+                    </label>
+                    <label className="form-field">
+                      <span>電話（選填）</span>
+                      <input name="phone" type="tel" placeholder="例如：+886-2-1234-5678" />
                     </label>
                   </div>
                   <label className="form-field">
@@ -369,6 +426,7 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
                 </button>
               </div>
             </form>
+            )}
           </>
         )}
       </section>

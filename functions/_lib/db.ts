@@ -8,6 +8,7 @@ export interface LocationRow {
   district: string | null
   region: PoolLocation['region']
   address: string
+  phone: string | null
   latitude: number | null
   longitude: number | null
   cap_policy: PoolLocation['capPolicy']
@@ -29,6 +30,7 @@ export interface SubmissionRow {
   district: string | null
   region: PoolLocation['region'] | null
   address: string | null
+  phone: string | null
   latitude: number | null
   longitude: number | null
   cap_policy: PoolLocation['capPolicy'] | null
@@ -62,6 +64,7 @@ export function mapLocation(row: LocationRow): PoolLocation {
     district: row.district ?? undefined,
     region: row.region,
     address: row.address,
+    phone: row.phone ?? undefined,
     latitude: row.latitude === null ? null : Number(row.latitude),
     longitude: row.longitude === null ? null : Number(row.longitude),
     capPolicy: row.cap_policy,
@@ -83,6 +86,7 @@ export function mapSubmission(row: SubmissionRow): Submission {
     district: row.district,
     region: row.region,
     address: row.address,
+    phone: row.phone,
     latitude: row.latitude === null ? null : Number(row.latitude),
     longitude: row.longitude === null ? null : Number(row.longitude),
     capPolicy: row.cap_policy,

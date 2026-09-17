@@ -1,15 +1,30 @@
 import { errorResponse, json } from '../_lib/response'
+import { parseJsonWithLimit, RequestBodyTooLargeError } from '../_lib/request'
+import { checkSubmissionRateLimit } from '../_lib/rateLimit'
 import { isPossibleDuplicate, ValidationError, validateSubmissionPayload } from '../_lib/validation'
 import { verifyTurnstile } from '../_lib/turnstile'
 import type { Env, PageHandler } from '../_lib/types'
 
+const MAX_SINGLE_SUBMISSION_BODY_BYTES = 32 * 1024
+
 export const onRequestPost: PageHandler = async ({ request, env }) => {
   if (!env.DB) return errorResponse('資料庫尚未設定。', 503, 'database-not-configured')
 
+  try {
+    if (!(await checkSubmissionRateLimit(env.DB, request, env))) {
+      return errorResponse('投稿次數已達上限，請稍後再試。', 429, 'rate-limit-exceeded', { 'Retry-After': '3600' })
+    }
+  } catch {
+    return errorResponse('投稿服務暫時無法使用，請稍後再試。', 503, 'rate-limit-unavailable')
+  }
+
   let body: unknown
   try {
-    body = await request.json()
-  } catch {
+    body = await parseJsonWithLimit(request, MAX_SINGLE_SUBMISSION_BODY_BYTES)
+  } catch (error) {
+    if (error instanceof RequestBodyTooLargeError) {
+      return errorResponse('投稿資料過大，請縮減內容後再試。', 413, 'payload-too-large')
+    }
     return errorResponse('請提供有效的 JSON 資料。', 400, 'invalid-json')
   }
 
@@ -44,9 +59,9 @@ export const onRequestPost: PageHandler = async ({ request, env }) => {
     await env.DB.prepare(`
       INSERT INTO submissions (
         id, type, location_id, name, city, district, region, address,
-        latitude, longitude, cap_policy, restrictions, source_type, source_url,
+        phone, latitude, longitude, cap_policy, restrictions, source_type, source_url,
         notes, nickname, email, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
     `).bind(
       id,
       submission.type,
@@ -56,6 +71,7 @@ export const onRequestPost: PageHandler = async ({ request, env }) => {
       submission.district,
       submission.region,
       submission.address,
+      submission.phone,
       submission.latitude,
       submission.longitude,
       submission.capPolicy,

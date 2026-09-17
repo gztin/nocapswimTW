@@ -172,6 +172,8 @@ h1 { max-width: 690px; margin-bottom: 0; font-size: clamp(24px, 3.2vw, 34px); li
 .detail-info-grid div { padding: 12px; border: 1px solid var(--border); border-radius: 8px; background: #fbfcfc; }
 .detail-info-grid dt { color: var(--subtle); font-size: 11px; }
 .detail-info-grid dd { margin: 6px 0 0; color: var(--ink); font-size: 14px; font-weight: 700; }
+.detail-phone { display: flex; align-items: center; gap: 5px; }
+.detail-phone .source-link { margin-left: 0; }
 .detail-section { padding: 18px 0; border-top: 1px solid var(--border); }
 .detail-section h3 { margin: 0 0 11px; font-size: 14px; }
 .muted-text { margin: 0; color: var(--subtle); font-size: 13px; }
@@ -186,6 +188,9 @@ h1 { max-width: 690px; margin-bottom: 0; font-size: clamp(24px, 3.2vw, 34px); li
 @keyframes modal-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .report-modal .detail-header { padding: 21px 24px 16px; }
 .report-modal .detail-header h2 { font-size: 21px; }
+.report-mode-tabs { display: flex; gap: 5px; margin: 18px 24px 0; padding: 4px; border-radius: 9px; background: #f4f7f7; }
+.report-mode-tabs button { flex: 1; min-height: 37px; padding: 0 10px; color: var(--muted); border: 0; border-radius: 6px; background: transparent; font-size: 12px; font-weight: 700; }
+.report-mode-tabs button.is-active { color: var(--brand-dark); background: #fff; box-shadow: 0 2px 6px rgba(37, 63, 66, .1); }
 .report-form { overflow-y: auto; padding: 20px 24px 24px; }
 .report-context, .report-location-summary { display: flex; flex-direction: column; gap: 4px; margin: 18px 24px 0; padding: 11px 12px; border-radius: 8px; background: #f3f8f8; font-size: 12px; }
 .report-context strong, .report-location-summary strong { color: var(--ink); }
@@ -203,6 +208,25 @@ h1 { max-width: 690px; margin-bottom: 0; font-size: clamp(24px, 3.2vw, 34px); li
 .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: #7bb5b5; box-shadow: 0 0 0 3px rgba(15, 127, 131, .1); }
 .form-field input:disabled, .form-field select:disabled, .form-field textarea:disabled { cursor: not-allowed; opacity: .65; }
 .form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 7px; }
+.import-guide { margin-bottom: 18px; padding: 13px; color: var(--muted); border: 1px solid #dbe9e8; border-radius: 8px; background: #f5faf9; font-size: 12px; line-height: 1.6; }
+.import-guide h3 { margin: 0 0 6px; color: var(--ink); font-size: 13px; }
+.import-guide p { margin: 0 0 6px; }
+.import-guide p:last-child { margin-bottom: 0; }
+.import-guide-limit { color: var(--brand-dark); font-weight: 700; }
+.import-guide details { margin-top: 9px; }
+.import-guide summary { color: var(--brand-dark); cursor: pointer; font-weight: 700; }
+.import-guide-details { margin-top: 8px; }
+.import-guide code { padding: 1px 4px; color: var(--brand-dark); border-radius: 4px; background: #e6f5f4; font-size: 11px; }
+.import-code-example { display: block; overflow-x: auto; margin-top: 8px; padding: 9px; white-space: pre; }
+.file-picker { display: flex; align-items: center; justify-content: center; min-height: 76px; padding: 12px; color: var(--brand-dark); border: 1px dashed #9bc7c7; border-radius: 8px; background: #fbfefe; font-size: 13px; font-weight: 800; cursor: pointer; }
+.file-picker:hover { background: var(--brand-soft); }
+.file-picker input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.selected-file { margin: 0 0 8px; color: var(--ink); font-size: 12px; font-weight: 700; word-break: break-all; }
+.import-preview { margin: 0 0 17px; padding: 11px 12px; color: var(--green); border: 1px solid #bce1cc; border-radius: 8px; background: var(--green-soft); font-size: 12px; line-height: 1.5; }
+.import-preview p { margin: 4px 0 0; color: var(--muted); }
+.import-preview--error { color: #a34e38; border-color: #f0d1c4; background: #fff6f2; }
+.import-error-list { margin: 7px 0 0; padding-left: 17px; color: #a34e38; }
+.import-error-list li + li { margin-top: 3px; }
 .restriction-fieldset { margin: 0 0 15px; padding: 0; border: 0; }
 .restriction-fieldset legend { display: block; margin-bottom: 8px; color: var(--ink); font-size: 12px; font-weight: 800; }
 .restriction-checkbox-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -315,6 +339,7 @@ h1 { max-width: 690px; margin-bottom: 0; font-size: clamp(24px, 3.2vw, 34px); li
   .detail-footer { padding: 13px 18px; }
   .report-modal { width: calc(100% - 20px); max-height: calc(100% - 20px); border-radius: 12px; }
   .report-modal .detail-header { padding: 18px 18px 14px; }
+  .report-mode-tabs { margin-left: 18px; margin-right: 18px; }
   .report-form { padding: 17px 18px 20px; }
   .report-context, .report-location-summary { margin-left: 18px; margin-right: 18px; }
   .report-type-grid { grid-template-columns: repeat(2, 1fr); }

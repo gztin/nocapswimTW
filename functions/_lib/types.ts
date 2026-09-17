@@ -10,6 +10,7 @@ export interface Env {
 export interface RequestLike {
   url: string
   headers: { get(name: string): string | null }
+  body?: ReadableStream<Uint8Array> | null
   json(): Promise<unknown>
 }
 

@@ -13,6 +13,7 @@ export interface PoolLocation {
   district?: string
   region: Region
   address: string
+  phone?: string
   latitude: number | null
   longitude: number | null
   capPolicy: CapPolicy

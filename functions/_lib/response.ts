@@ -5,6 +5,6 @@ export function json(body: unknown, status = 200, headers?: HeadersInit) {
   return new Response(JSON.stringify(body), { status, headers: responseHeaders })
 }
 
-export function errorResponse(message: string, status: number, code?: string) {
-  return json({ error: message, ...(code ? { code } : {}) }, status)
+export function errorResponse(message: string, status: number, code?: string, headers?: HeadersInit) {
+  return json({ error: message, ...(code ? { code } : {}) }, status, headers)
 }

@@ -121,6 +121,7 @@ function SubmissionDetail({ submission, busy, onApprove, onReject }: SubmissionD
         <div><dt>投稿類型</dt><dd>{REPORT_TYPE_LABELS[submission.type]}</dd></div>
         <div><dt>投稿時間</dt><dd>{formatSubmissionDate(submission.createdAt)}</dd></div>
         <div><dt>地址</dt><dd>{displayValue(submission.address)}</dd></div>
+        <div><dt>電話</dt><dd>{displayValue(submission.phone)}</dd></div>
         <div><dt>縣市／地區</dt><dd>{[submission.city, submission.district].filter(Boolean).join('／') || '—'}</dd></div>
         <div><dt>泳帽規定</dt><dd>{submission.capPolicy ? CAP_POLICY_LABELS[submission.capPolicy] : '—'}</dd></div>
         <div><dt>資料來源</dt><dd>{submission.sourceType ? SOURCE_TYPE_LABELS[submission.sourceType] : '—'}</dd></div>

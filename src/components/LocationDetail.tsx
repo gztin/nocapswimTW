@@ -1,4 +1,4 @@
-import { CalendarDays, ExternalLink, MapPin, ShieldAlert, X } from 'lucide-react'
+import { CalendarDays, ExternalLink, MapPin, Phone, ShieldAlert, X } from 'lucide-react'
 import type { PoolLocation } from '../types/location'
 import { SOURCE_TYPE_LABELS } from '../types/location'
 import { formatVerifiedDate, getGoogleMapsUrl } from '../utils/location'
@@ -115,6 +115,15 @@ export function LocationDetail({
                 )}
               </dd>
             </div>
+            {location.phone && (
+              <div>
+                <dt>電話</dt>
+                <dd className="detail-phone">
+                  <Phone size={14} aria-hidden="true" />
+                  <a className="source-link" href={`tel:${location.phone}`}>{location.phone}</a>
+                </dd>
+              </div>
+            )}
           </dl>
 
           <div className="detail-section">

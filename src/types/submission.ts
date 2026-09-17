@@ -13,6 +13,7 @@ export interface Submission {
   district: string | null
   region: Region | null
   address: string | null
+  phone: string | null
   latitude: number | null
   longitude: number | null
   capPolicy: CapPolicy | null
@@ -35,6 +36,7 @@ export interface SubmissionPayload {
   district?: string | null
   region?: Region | null
   address: string
+  phone?: string | null
   latitude?: number | null
   longitude?: number | null
   capPolicy: CapPolicy
@@ -50,6 +52,29 @@ export interface SubmissionPayload {
 export interface ApprovalPayload {
   latitude?: number | null
   longitude?: number | null
+}
+
+export interface BulkSubmissionItemPayload {
+  name: string
+  city: string
+  district?: string | null
+  region: Region
+  address: string
+  phone?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  capPolicy: CapPolicy
+  restrictions: string[]
+  sourceType: SourceType
+  sourceUrl?: string | null
+  notes?: string | null
+}
+
+export interface BulkSubmissionPayload {
+  items: BulkSubmissionItemPayload[]
+  nickname?: string | null
+  email?: string | null
+  turnstileToken?: string | null
 }
 
 export const REPORT_TYPE_LABELS: Record<ReportType, string> = {

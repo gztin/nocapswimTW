@@ -5,12 +5,14 @@ const REPORT_TYPES: ReportType[] = ['new-location', 'policy-change', 'address-er
 const CAP_POLICIES: CapPolicy[] = ['not-required', 'conditional', 'unknown']
 const SOURCE_TYPES: SourceType[] = ['official', 'phone', 'onsite', 'community']
 const REGIONS: Region[] = ['north', 'central', 'south', 'east', 'islands']
+export const MAX_BULK_SUBMISSION_ITEMS = 50
 
 const limits = {
   name: 160,
   city: 40,
   district: 40,
   address: 240,
+  phone: 40,
   sourceUrl: 500,
   notes: 2000,
   nickname: 60,
@@ -27,6 +29,7 @@ export interface ValidatedSubmission {
   district: string | null
   region: Region | null
   address: string
+  phone: string | null
   latitude: number | null
   longitude: number | null
   capPolicy: CapPolicy
@@ -116,6 +119,7 @@ export function validateSubmissionPayload(input: unknown): ValidatedSubmission {
 
   const name = requiredText(body.name, limits.name, '地點名稱')
   const address = requiredText(body.address, limits.address, '地址')
+  const phone = optionalText(body.phone, limits.phone)
   const city = optionalText(body.city, limits.city)
   const district = optionalText(body.district, limits.district)
   const region = body.region === undefined || body.region === null || body.region === ''
@@ -143,6 +147,7 @@ export function validateSubmissionPayload(input: unknown): ValidatedSubmission {
     district,
     region,
     address,
+    phone,
     latitude,
     longitude,
     capPolicy,
@@ -154,6 +159,43 @@ export function validateSubmissionPayload(input: unknown): ValidatedSubmission {
     email,
     turnstileToken,
   }
+}
+
+export interface ValidatedBulkSubmission {
+  items: ValidatedSubmission[]
+  nickname: string | null
+  email: string | null
+  turnstileToken: string | null
+}
+
+export function validateBulkSubmissionPayload(input: unknown): ValidatedBulkSubmission {
+  const body = asRecord(input)
+  if (!Array.isArray(body.items)) throw new ValidationError('批次資料格式不正確。')
+  if (!body.items.length) throw new ValidationError('檔案沒有可投稿的資料。')
+  if (body.items.length > MAX_BULK_SUBMISSION_ITEMS) {
+    throw new ValidationError(`單次最多只能投稿 ${MAX_BULK_SUBMISSION_ITEMS} 筆資料。`)
+  }
+
+  const nickname = optionalText(body.nickname, limits.nickname)
+  const email = optionalText(body.email, limits.email)
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new ValidationError('Email 格式不正確。')
+  const turnstileToken = optionalText(body.turnstile_token ?? body.turnstileToken, limits.turnstileToken)
+  const items = body.items.map((item, index) => {
+    try {
+      return validateSubmissionPayload({
+        ...(asRecord(item)),
+        type: 'new-location',
+        nickname,
+        email,
+        turnstileToken,
+      })
+    } catch (error) {
+      if (error instanceof ValidationError) throw new ValidationError(`第 ${index + 1} 筆：${error.message}`)
+      throw new ValidationError(`第 ${index + 1} 筆資料不正確。`)
+    }
+  })
+
+  return { items, nickname, email, turnstileToken }
 }
 
 export function validateApprovalPayload(input: unknown): ApprovalOverrides {

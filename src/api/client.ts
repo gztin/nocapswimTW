@@ -1,5 +1,11 @@
 import type { PoolLocation } from '../types/location'
-import type { ApprovalPayload, Submission, SubmissionPayload, SubmissionStatus } from '../types/submission'
+import type {
+  ApprovalPayload,
+  BulkSubmissionPayload,
+  Submission,
+  SubmissionPayload,
+  SubmissionStatus,
+} from '../types/submission'
 
 export class ApiError extends Error {
   status: number
@@ -52,6 +58,13 @@ export function fetchLocations() {
 
 export function createSubmission(payload: SubmissionPayload) {
   return requestJson<{ id: string; status: SubmissionStatus }>('/api/submissions', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function createBulkSubmissions(payload: BulkSubmissionPayload) {
+  return requestJson<{ ids: string[]; status: SubmissionStatus; accepted: number }>('/api/submissions/bulk', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
