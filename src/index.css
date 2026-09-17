@@ -88,8 +88,6 @@ h1 { margin-bottom: 0; font-size: clamp(27px, 3.2vw, 34px); line-height: 1.25; l
 .location-card { min-width: 0; display: flex; flex-direction: column; width: 100%; padding: 0; color: var(--ink); border: 1px solid var(--border); border-radius: 16px; background: var(--panel); box-shadow: var(--shadow); overflow: hidden; text-align: left; transition: transform .2s ease, box-shadow .2s ease; }
 .location-card:hover { transform: translateY(-2px); box-shadow: 0 15px 34px rgba(24, 59, 78, 0.13); }
 .location-card:focus-visible { outline: 3px solid rgba(22, 125, 141, .35); outline-offset: 3px; }
-.location-card-image { width: 100%; aspect-ratio: 16 / 10; display: block; object-fit: cover; background: var(--brand-soft); transition: transform .2s ease; }
-.location-card:hover .location-card-image { transform: scale(1.02); }
 .location-card-content { min-width: 0; display: flex; flex: 1; flex-direction: column; padding: 16px 17px 17px; }
 .card-heading { display: block; margin-bottom: 12px; }
 .card-heading h3 { margin: 0; font-size: 17px; line-height: 1.4; }

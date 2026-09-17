@@ -1,7 +1,6 @@
 import { CalendarDays } from 'lucide-react'
 import type { PoolLocation } from '../types/location'
 import { formatVerifiedDate } from '../utils/location'
-import { LocationImage } from './LocationImage'
 import { StatusBadge } from './StatusBadge'
 
 interface LocationCardProps {
@@ -22,11 +21,6 @@ export function LocationCard({ location, onSelect }: LocationCardProps) {
       onClick={() => onSelect(location)}
       aria-label={`查看${location.name}詳細資料`}
     >
-      <LocationImage
-        className="location-card-image"
-        imageUrl={location.imageUrl}
-        alt={`${location.name}泳池`}
-      />
       <div className="location-card-content">
         <div className="card-heading">
           <div>
