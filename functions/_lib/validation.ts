@@ -35,6 +35,7 @@ export interface ValidatedSubmission {
   capPolicy: CapPolicy
   restrictions: string[]
   sourceType: SourceType
+  officialUrl: string | null
   sourceUrl: string | null
   notes: string | null
   nickname: string | null
@@ -96,14 +97,14 @@ function parseRestrictions(value: unknown): string[] {
   return parsed.map((item) => requiredText(item, limits.restriction, '使用限制'))
 }
 
-function optionalUrl(value: unknown): string | null {
+function optionalUrl(value: unknown, label: string): string | null {
   const result = optionalText(value, limits.sourceUrl)
   if (!result) return null
   try {
     const url = new URL(result)
     if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('unsupported protocol')
   } catch {
-    throw new ValidationError('來源網址格式不正確。')
+    throw new ValidationError(`${label}格式不正確。`)
   }
   return result
 }
@@ -153,7 +154,8 @@ export function validateSubmissionPayload(input: unknown): ValidatedSubmission {
     capPolicy,
     restrictions: parseRestrictions(body.restrictions),
     sourceType,
-    sourceUrl: optionalUrl(body.source_url ?? body.sourceUrl),
+    officialUrl: optionalUrl(body.official_url ?? body.officialUrl, '官方網站網址'),
+    sourceUrl: optionalUrl(body.source_url ?? body.sourceUrl, '來源網址'),
     notes: optionalText(body.notes, limits.notes),
     nickname: optionalText(body.nickname, limits.nickname),
     email,

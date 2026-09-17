@@ -19,6 +19,7 @@ export interface PoolLocation {
   restrictions?: string[]
   sourceType: SourceType
   sourceName?: string
+  officialUrl?: string
   sourceUrl?: string
   lastVerified?: string
   notes?: string

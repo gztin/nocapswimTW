@@ -7,7 +7,7 @@ export const onRequestGet: PageHandler = async ({ env }) => {
   try {
     const result = await env.DB.prepare(`
       SELECT id, name, city, district, region, address, phone, image_url, latitude, longitude,
-        cap_policy, restrictions, source_type, source_name, source_url, last_verified,
+        cap_policy, restrictions, source_type, source_name, official_url, source_url, last_verified,
         notes, created_at, updated_at
       FROM locations
       ORDER BY city ASC, name ASC

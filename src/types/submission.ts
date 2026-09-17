@@ -19,6 +19,7 @@ export interface Submission {
   capPolicy: CapPolicy | null
   restrictions: string[]
   sourceType: SourceType | null
+  officialUrl: string | null
   sourceUrl: string | null
   notes: string | null
   nickname: string | null
@@ -42,6 +43,7 @@ export interface SubmissionPayload {
   capPolicy: CapPolicy
   restrictions: string[]
   sourceType: SourceType
+  officialUrl?: string | null
   sourceUrl?: string | null
   notes?: string | null
   nickname?: string | null
@@ -66,6 +68,7 @@ export interface BulkSubmissionItemPayload {
   capPolicy: CapPolicy
   restrictions: string[]
   sourceType: SourceType
+  officialUrl?: string | null
   sourceUrl?: string | null
   notes?: string | null
 }

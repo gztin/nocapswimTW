@@ -61,7 +61,7 @@ export const onRequestPost: PageHandler = async ({ request, env, params }) => {
         env.DB.prepare(`
           INSERT INTO locations (
             id, name, city, district, region, address, latitude, longitude,
-            phone, cap_policy, restrictions, source_type, source_url, last_verified,
+            phone, cap_policy, restrictions, source_type, official_url, source_url, last_verified,
             notes, created_at, updated_at
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).bind(
@@ -77,6 +77,7 @@ export const onRequestPost: PageHandler = async ({ request, env, params }) => {
           submission.cap_policy,
           submission.restrictions,
           submission.source_type,
+          submission.official_url,
           submission.source_url,
           verifiedDate,
           submission.notes,
@@ -108,6 +109,7 @@ export const onRequestPost: PageHandler = async ({ request, env, params }) => {
           cap_policy = COALESCE(?, cap_policy),
           restrictions = COALESCE(?, restrictions),
           source_type = COALESCE(?, source_type),
+          official_url = COALESCE(?, official_url),
           source_url = COALESCE(?, source_url),
           last_verified = ?, notes = COALESCE(?, notes), updated_at = ?
         WHERE id = ?
@@ -119,6 +121,7 @@ export const onRequestPost: PageHandler = async ({ request, env, params }) => {
         submission.cap_policy,
         submission.restrictions,
         submission.source_type,
+        submission.official_url,
         submission.source_url,
         verifiedDate,
         submission.notes,

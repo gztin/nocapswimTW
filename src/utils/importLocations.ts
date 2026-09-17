@@ -92,9 +92,12 @@ const headerAliases: Record<string, string> = {
   sourcetype: 'sourceType',
   source_type: 'sourceType',
   資料來源: 'sourceType',
+  officialurl: 'officialUrl',
+  official_url: 'officialUrl',
+  官方網站: 'officialUrl',
   sourceurl: 'sourceUrl',
   source_url: 'sourceUrl',
-  website: 'sourceUrl',
+  website: 'officialUrl',
   來源網址: 'sourceUrl',
   notes: 'notes',
   補充說明: 'notes',
@@ -202,6 +205,7 @@ function normalizeRow(value: unknown, row: number): { item: BulkSubmissionItemPa
   const capPolicy = mapCapPolicy(getField(record, 'capPolicy')) ?? 'unknown'
   const sourceType = mapSourceType(getField(record, 'sourceType')) ?? 'community'
   const restrictions = parseRestrictions(getField(record, 'restrictions'))
+  const officialUrl = textValue(getField(record, 'officialUrl')) || null
   const sourceUrl = textValue(getField(record, 'sourceUrl')) || null
   const notes = textValue(getField(record, 'notes')) || null
   const phone = textValue(getField(record, 'phone')) || null
@@ -221,12 +225,13 @@ function normalizeRow(value: unknown, row: number): { item: BulkSubmissionItemPa
   }
   if ((latitude === null) !== (longitude === null)) errors.push({ row, message: '緯度與經度需要同時填寫。' })
   if (phone && phone.length > 40) errors.push({ row, message: '電話不可超過 40 個字元。' })
-  if (sourceUrl) {
+  for (const [url, label] of [[officialUrl, '官方網站'], [sourceUrl, '來源網址']] as const) {
+    if (!url) continue
     try {
-      const url = new URL(sourceUrl)
-      if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('unsupported protocol')
+      const parsedUrl = new URL(url)
+      if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') throw new Error('unsupported protocol')
     } catch {
-      errors.push({ row, message: '來源網址必須是 http 或 https 網址。' })
+      errors.push({ row, message: `${label}必須是 http 或 https 網址。` })
     }
   }
   if (notes && notes.length > 2000) errors.push({ row, message: '補充說明不可超過 2,000 個字元。' })
@@ -250,6 +255,7 @@ function normalizeRow(value: unknown, row: number): { item: BulkSubmissionItemPa
       capPolicy,
       restrictions: restrictions ?? [],
       sourceType,
+      officialUrl,
       sourceUrl,
       notes,
     },

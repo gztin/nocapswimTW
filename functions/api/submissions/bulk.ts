@@ -70,9 +70,9 @@ export const onRequestPost: PageHandler = async ({ request, env }) => {
     const statements = submission.items.map((item, index) => env.DB.prepare(`
       INSERT INTO submissions (
         id, type, location_id, name, city, district, region, address,
-        phone, latitude, longitude, cap_policy, restrictions, source_type, source_url,
+        phone, latitude, longitude, cap_policy, restrictions, source_type, official_url, source_url,
         notes, nickname, email, status, created_at
-      ) VALUES (?, 'new-location', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
+      ) VALUES (?, 'new-location', NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)
     `).bind(
       ids[index],
       item.name,
@@ -86,6 +86,7 @@ export const onRequestPost: PageHandler = async ({ request, env }) => {
       item.capPolicy,
       item.restrictions.length ? JSON.stringify(item.restrictions) : null,
       item.sourceType,
+      item.officialUrl,
       item.sourceUrl,
       item.notes,
       submission.nickname,

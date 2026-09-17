@@ -69,7 +69,8 @@ migrations/
 ├── 0002_seed_locations.sql       # 歷史 migration，保留不改寫
 ├── 0003_replace_sample_seed_add_phone_and_rate_limit.sql
 ├── 0004_add_location_image_url.sql
-└── 0005_add_location_source_name.sql
+├── 0005_add_location_source_name.sql
+└── 0006_split_official_and_source_urls.sql
 ```
 
 搜尋與地區篩選會同步到 URL query，例如 `?region=north&q=台北`，方便分享目前的文字清單結果。
@@ -103,7 +104,7 @@ Cloudflare Pages 的 Variables／Secrets 需要設定：
 
 `wrangler.toml` 的 `DB` binding 名稱必須維持為 `DB`。若使用 Cloudflare Dashboard 綁定 D1，也請使用相同的 binding name。
 
-`0003_replace_sample_seed_add_phone_and_rate_limit.sql` 會移除原本四筆範例資料，改以附件整理的 35 筆飯店資料作為基礎清單，並新增電話欄位與投稿頻率限制表。`0004_add_location_image_url.sql` 新增 nullable 的 `image_url` 欄位；`0005_add_location_source_name.sql` 將目前 35 筆資料的來源名稱補為「熱血史丹利大叔應援團」。兩個 migration 都不會要求既有資料填入圖片。`0002_seed_locations.sql` 是已存在的歷史 migration，不直接改寫；新資料庫依序套用後，最終資料仍是 35 筆。前台 production 只讀 `/api/locations`，不會直接載入 `src/data/locations.ts`，也不會載入前端假資料。
+`0003_replace_sample_seed_add_phone_and_rate_limit.sql` 會移除原本四筆範例資料，改以附件整理的 35 筆飯店資料作為基礎清單，並新增電話欄位與投稿頻率限制表。`0004_add_location_image_url.sql` 新增 nullable 的 `image_url` 欄位；`0005_add_location_source_name.sql` 將目前 35 筆資料的來源名稱補為「熱血史丹利大叔應援團」；`0006_split_official_and_source_urls.sql` 將飯店官網與免泳帽情報來源拆成 `official_url` 與 `source_url`，並為投稿保留相同的欄位語意。這些 migration 都不會要求既有資料填入圖片。`0002_seed_locations.sql` 是已存在的歷史 migration，不直接改寫；新資料庫依序套用後，最終資料仍是 35 筆。前台 production 只讀 `/api/locations`，不會直接載入 `src/data/locations.ts`，也不會載入前端假資料。
 
 部署 Pages：
 
@@ -139,7 +140,7 @@ npm run deploy
 
 前台「回報地點」提供「上傳 CSV／JSON」方式。JSON 可使用資料陣列，或使用 `{ "schema_version": 1, "locations": [...] }` 外層格式；CSV 第一列必須是欄位名稱。
 
-必要欄位為 `name`、`address`、`region`。可選欄位為 `city`、`district`、`phone`、`latitude`、`longitude`、`capPolicy`、`restrictions`、`sourceType`、`sourceUrl`、`notes`。附件使用的 `swim_cap_policy`、`source_type`、`website` 欄位也會自動轉換。檔案資料會先在瀏覽器解析並顯示逐列格式檢查結果，通過後才送到批次投稿 API。
+必要欄位為 `name`、`address`、`region`。可選欄位為 `city`、`district`、`phone`、`latitude`、`longitude`、`capPolicy`、`restrictions`、`sourceType`、`officialUrl`、`sourceUrl`、`notes`。`officialUrl` 是飯店／場館官方網站，`sourceUrl` 是免泳帽情報的原始貼文或網頁。附件使用的 `swim_cap_policy`、`source_type`、`website` 欄位也會自動轉換，其中 `website` 會視為 `officialUrl`。檔案資料會先在瀏覽器解析並顯示逐列格式檢查結果，通過後才送到批次投稿 API。
 
 ## 資料與導航提醒
 

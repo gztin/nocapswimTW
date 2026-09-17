@@ -125,12 +125,19 @@ function SubmissionDetail({ submission, busy, onApprove, onReject }: SubmissionD
         <div><dt>縣市／地區</dt><dd>{[submission.city, submission.district].filter(Boolean).join('／') || '—'}</dd></div>
         <div><dt>泳帽規定</dt><dd>{submission.capPolicy ? CAP_POLICY_LABELS[submission.capPolicy] : '—'}</dd></div>
         <div><dt>資料來源</dt><dd>{submission.sourceType ? SOURCE_TYPE_LABELS[submission.sourceType] : '—'}</dd></div>
+        <div><dt>飯店官方網站</dt><dd>{displayValue(submission.officialUrl)}</dd></div>
       </dl>
 
+      {submission.officialUrl && (
+        <a className="admin-source-link" href={submission.officialUrl} target="_blank" rel="noreferrer">
+          <ExternalLink size={15} aria-hidden="true" />
+          開啟飯店官方網站
+        </a>
+      )}
       {submission.sourceUrl && (
         <a className="admin-source-link" href={submission.sourceUrl} target="_blank" rel="noreferrer">
           <ExternalLink size={15} aria-hidden="true" />
-          開啟來源網址
+          開啟資訊來源網址
         </a>
       )}
 

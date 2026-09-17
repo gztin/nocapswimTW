@@ -16,6 +16,7 @@ export interface LocationRow {
   restrictions: string | null
   source_type: PoolLocation['sourceType']
   source_name: string | null
+  official_url: string | null
   source_url: string | null
   last_verified: string | null
   notes: string | null
@@ -38,6 +39,7 @@ export interface SubmissionRow {
   cap_policy: PoolLocation['capPolicy'] | null
   restrictions: string | null
   source_type: PoolLocation['sourceType'] | null
+  official_url: string | null
   source_url: string | null
   notes: string | null
   nickname: string | null
@@ -74,6 +76,7 @@ export function mapLocation(row: LocationRow): PoolLocation {
     restrictions: parseRestrictions(row.restrictions),
     sourceType: row.source_type,
     sourceName: row.source_name ?? undefined,
+    officialUrl: row.official_url ?? undefined,
     sourceUrl: row.source_url ?? undefined,
     lastVerified: row.last_verified ?? undefined,
     notes: row.notes ?? undefined,
@@ -96,6 +99,7 @@ export function mapSubmission(row: SubmissionRow): Submission {
     capPolicy: row.cap_policy,
     restrictions: parseRestrictions(row.restrictions),
     sourceType: row.source_type,
+    officialUrl: row.official_url,
     sourceUrl: row.source_url,
     notes: row.notes,
     nickname: row.nickname,

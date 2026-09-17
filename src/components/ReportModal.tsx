@@ -140,6 +140,7 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
       capPolicy: String(form.get('cap_policy') ?? 'unknown') as CapPolicy,
       restrictions,
       sourceType: String(form.get('source_type') ?? 'community') as SourceType,
+      officialUrl: String(form.get('official_url') ?? '') || null,
       sourceUrl: String(form.get('source_url') ?? '') || null,
       notes: String(form.get('notes') ?? '') || null,
       nickname: String(form.get('nickname') ?? '') || null,
@@ -388,7 +389,12 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
               </fieldset>
 
               <label className="form-field">
-                <span>來源網址（選填）</span>
+                <span>飯店／場館官方網站（選填）</span>
+                <input name="official_url" type="url" defaultValue={location?.officialUrl ?? ''} placeholder="https://..." />
+              </label>
+
+              <label className="form-field">
+                <span>資訊來源網址（選填）</span>
                 <input name="source_url" type="url" defaultValue={location?.sourceUrl ?? ''} placeholder="https://..." />
               </label>
 

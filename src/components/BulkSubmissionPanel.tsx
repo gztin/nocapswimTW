@@ -87,9 +87,10 @@ export function BulkSubmissionPanel({
           <summary>查看欄位與範例</summary>
           <div className="import-guide-details">
             <p><strong>必要欄位：</strong>地點名稱、地址、地區。若 CSV 沒有縣市，系統會嘗試從地址判斷。</p>
-            <p><strong>可用欄位：</strong>name、city、district、region、address、phone、latitude、longitude、capPolicy、restrictions、sourceType、sourceUrl、notes。</p>
-            <p><strong>附件相容欄位：</strong>swim_cap_policy、source_type、website、verification_status。</p>
-            <code className="import-code-example">name,city,region,address,capPolicy,sourceType,sourceUrl{`\n`}海邊渡假飯店,屏東縣,south,屏東縣某鄉某路1號,not-required,community,https://example.com</code>
+            <p><strong>可用欄位：</strong>name、city、district、region、address、phone、latitude、longitude、capPolicy、restrictions、sourceType、officialUrl、sourceUrl、notes。</p>
+            <p><strong>欄位用途：</strong>officialUrl 是飯店官網；sourceUrl 是免泳帽情報的原始貼文／網頁。</p>
+            <p><strong>附件相容欄位：</strong>swim_cap_policy、source_type、website（視為飯店官網）、verification_status。</p>
+            <code className="import-code-example">name,city,region,address,capPolicy,sourceType,officialUrl,sourceUrl{`\n`}海邊渡假飯店,屏東縣,south,屏東縣某鄉某路1號,not-required,community,https://hotel.example,https://source.example</code>
           </div>
         </details>
       </section>
