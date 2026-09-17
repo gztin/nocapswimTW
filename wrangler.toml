@@ -8,4 +8,7 @@ ENVIRONMENT = "production"
 [[d1_databases]]
 binding = "DB"
 database_name = "nocapswimtw"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "05987cd1-b000-4ebb-82c4-cdd210926681"
+
+
+
