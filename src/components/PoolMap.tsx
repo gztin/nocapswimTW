@@ -1,0 +1,158 @@
+import { LocateFixed } from 'lucide-react'
+import { Map as MapLibreMap, Marker, NavigationControl } from 'maplibre-gl'
+import { useEffect, useRef, useState } from 'react'
+import type { PoolLocation } from '../types/location'
+import { LocationDetail } from './LocationDetail'
+
+interface PoolMapProps {
+  locations: PoolLocation[]
+  selectedLocation?: PoolLocation | null
+  onSelectLocation: (location: PoolLocation) => void
+  onViewDetails: (location: PoolLocation) => void
+  onCloseSelection: () => void
+}
+
+const mapStyle = 'https://tiles.openfreemap.org/styles/liberty'
+
+function markerClassName(location: PoolLocation) {
+  return `map-marker map-marker--${location.capPolicy}`
+}
+
+function createMarkers(
+  map: MapLibreMap,
+  locations: PoolLocation[],
+  onSelectLocation: (location: PoolLocation) => void,
+) {
+  return locations.map((location) => {
+    const element = document.createElement('button')
+    element.type = 'button'
+    element.className = markerClassName(location)
+    element.setAttribute('aria-label', `選取${location.name}`)
+    element.title = location.name
+    element.addEventListener('click', () => {
+      onSelectLocation(location)
+      map.flyTo({
+        center: [location.longitude, location.latitude],
+        zoom: Math.max(map.getZoom(), 10.2),
+        duration: 700,
+      })
+    })
+
+    return new Marker({ element, anchor: 'bottom' })
+      .setLngLat([location.longitude, location.latitude])
+      .addTo(map)
+  })
+}
+
+export function PoolMap({
+  locations,
+  selectedLocation,
+  onSelectLocation,
+  onViewDetails,
+  onCloseSelection,
+}: PoolMapProps) {
+  const mapContainer = useRef<HTMLDivElement>(null)
+  const map = useRef<MapLibreMap | null>(null)
+  const markers = useRef<Marker[]>([])
+  const [mapReady, setMapReady] = useState(false)
+  const [mapError, setMapError] = useState(false)
+
+  useEffect(() => {
+    if (!mapContainer.current || map.current) return
+
+    const instance = new MapLibreMap({
+      container: mapContainer.current,
+      style: mapStyle,
+      center: [121, 23.75],
+      zoom: 6.35,
+      minZoom: 5.4,
+      maxZoom: 16,
+    })
+
+    instance.addControl(new NavigationControl({ showCompass: false }), 'top-right')
+    const drawInitialMarkers = () => {
+      setMapReady(true)
+      markers.current.forEach((marker) => marker.remove())
+      markers.current = createMarkers(instance, locations, onSelectLocation)
+    }
+    const markMapReady = () => {
+      setMapReady(true)
+      if (markers.current.length === 0) {
+        markers.current = createMarkers(instance, locations, onSelectLocation)
+      }
+    }
+    const ensureMarkers = () => {
+      if (instance.isStyleLoaded()) markMapReady()
+    }
+    instance.on('load', drawInitialMarkers)
+    // Some public styles finish their first render through `idle` after the
+    // initial load event. Keep the marker layer resilient to both timings.
+    instance.on('idle', ensureMarkers)
+    instance.on('styledata', ensureMarkers)
+    instance.on('render', ensureMarkers)
+    instance.on('error', () => setMapError(true))
+    map.current = instance
+    // Markers can be created before the remote style finishes; MapLibre will
+    // reposition them as soon as the map has its first render.
+    markers.current = createMarkers(instance, locations, onSelectLocation)
+
+    return () => {
+      markers.current.forEach((marker) => marker.remove())
+      markers.current = []
+      instance.remove()
+      map.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!map.current) return
+
+    markers.current.forEach((marker) => marker.remove())
+    markers.current = createMarkers(map.current, locations, onSelectLocation)
+  }, [locations, mapReady, onSelectLocation])
+
+  useEffect(() => {
+    if (!selectedLocation || !map.current) return
+    map.current.flyTo({
+      center: [selectedLocation.longitude, selectedLocation.latitude],
+      zoom: Math.max(map.current.getZoom(), 10.2),
+      duration: 700,
+    })
+  }, [mapReady, selectedLocation])
+
+  const resetMap = () => {
+    map.current?.flyTo({ center: [121, 23.75], zoom: 6.35, duration: 700 })
+  }
+
+  return (
+    <div className="map-shell">
+      <div className="map-canvas" ref={mapContainer} aria-label="台灣泳池地圖" />
+      <div className="map-tools">
+        <button className="map-tool-button" type="button" onClick={resetMap}>
+          <LocateFixed size={16} aria-hidden="true" />
+          顯示全台
+        </button>
+      </div>
+      <div className="map-legend" aria-label="泳帽狀態圖例">
+        <span><i className="legend-dot legend-dot--not-required" />不強制</span>
+        <span><i className="legend-dot legend-dot--conditional" />有條件</span>
+        <span><i className="legend-dot legend-dot--unknown" />待確認</span>
+      </div>
+      {mapError && (
+        <div className="map-error" role="status">
+          地圖底圖暫時無法載入，仍可使用左側清單瀏覽資料。
+        </div>
+      )}
+      {selectedLocation && (
+        <div className="map-selected-card">
+          <LocationDetail
+            location={selectedLocation}
+            compact
+            onClose={onCloseSelection}
+            onViewDetails={() => onViewDetails(selectedLocation)}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
