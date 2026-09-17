@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronRight } from 'lucide-react'
+import { CalendarDays } from 'lucide-react'
 import type { PoolLocation } from '../types/location'
 import { formatVerifiedDate } from '../utils/location'
 import { LocationImage } from './LocationImage'
@@ -16,17 +16,10 @@ export function LocationCard({ location, onSelect }: LocationCardProps) {
   const placeText = [location.city, location.district].filter(Boolean).join('・')
 
   return (
-    <article
+    <button
       className="location-card"
-      role="button"
-      tabIndex={0}
+      type="button"
       onClick={() => onSelect(location)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault()
-          onSelect(location)
-        }
-      }}
       aria-label={`查看${location.name}詳細資料`}
     >
       <LocationImage
@@ -40,7 +33,6 @@ export function LocationCard({ location, onSelect }: LocationCardProps) {
             <h3>{location.name}</h3>
             <p className="location-place">{placeText}</p>
           </div>
-          <ChevronRight className="card-chevron" size={19} aria-hidden="true" />
         </div>
         <StatusBadge policy={location.capPolicy} />
         <div className="card-meta">
@@ -50,6 +42,6 @@ export function LocationCard({ location, onSelect }: LocationCardProps) {
           </span>
         </div>
       </div>
-    </article>
+    </button>
   )
 }

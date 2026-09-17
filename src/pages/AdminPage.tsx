@@ -313,7 +313,7 @@ export function AdminPage() {
       <section className="admin-content">
         <div className="admin-list-panel">
           {loading && !submissions.length ? (
-            <div className="admin-empty"><LoaderCircle className="spin" size={24} /><span>載入投稿資料中...</span></div>
+            <div className="admin-empty"><LoaderCircle className="spin" size={24} aria-hidden="true" /><span>載入投稿資料中...</span></div>
           ) : visibleSubmissions.length ? (
             <div className="admin-submission-list">
               {visibleSubmissions.map((submission) => (

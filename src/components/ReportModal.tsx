@@ -189,7 +189,7 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
       >
         {submitted ? (
           <div className="report-success">
-            <span className="success-icon"><CheckCircle2 size={32} /></span>
+            <span className="success-icon" aria-hidden="true"><CheckCircle2 size={32} /></span>
             <h2>{submittedCount > 1 ? '批次投稿已送出' : '感謝你的回報'}</h2>
             <p>{submittedCount > 1 ? `已收到 ${submittedCount} 筆資料，會逐筆經過確認後加入地圖。` : '資料會經過確認後加入或更新地圖。'}<br />謝謝你一起協助維護 NoCapSwimTW。</p>
             <button className="button button--primary" type="button" onClick={onClose}>
@@ -204,7 +204,7 @@ export function ReportModal({ open, location, onClose }: ReportModalProps) {
                 <h2 id="report-modal-title">回報地點</h2>
               </div>
               <button className="icon-button" type="button" onClick={onClose} disabled={submitting} aria-label="關閉回報表單">
-                <X size={20} />
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
             {location && (

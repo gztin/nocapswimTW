@@ -30,11 +30,8 @@ export function HomePage({
 }: HomePageProps) {
   return (
     <main>
-      <section className="intro-section" aria-labelledby="page-title">
-        <div>
-          <h1 id="page-title">免泳帽泳池</h1>
-          <p className="intro-description">找找台灣有哪些不用戴泳帽的飯店與泳池</p>
-        </div>
+      <section className="intro-section">
+        <p className="intro-description">找找台灣有哪些不用戴泳帽的飯店與泳池</p>
       </section>
 
       <section className="search-toolbar" aria-label="搜尋與篩選">
@@ -43,14 +40,14 @@ export function HomePage({
         </div>
         <div className="filter-row">
           <RegionFilterControl value={region} onChange={onRegionChange} />
-          <div className="results-meta">
-            <span className="filter-hint">共 {filteredLocations.length} 個地點</span>
-            <span className="data-notice">
-              <Info size={14} aria-hidden="true" />
-              泳池規定可能變動，前往前建議再次確認
-            </span>
-          </div>
         </div>
+        <div className="results-summary">
+          <span className="filter-hint">{filteredLocations.length} 個地點</span>
+        </div>
+        <p className="data-notice data-notice--home">
+          <Info size={14} aria-hidden="true" />
+          泳池規定可能變動，前往前建議再次確認
+        </p>
       </section>
 
       {loading ? (

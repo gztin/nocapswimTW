@@ -14,7 +14,7 @@ export function LocationList({
   return (
     <section className="location-list" aria-labelledby="location-list-title">
       <div className="list-heading">
-        <h2 id="location-list-title">地點清單</h2>
+        <h2 className="visually-hidden" id="location-list-title">地點清單</h2>
       </div>
       {locations.length > 0 ? (
         <div className="location-card-list">
