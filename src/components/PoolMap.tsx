@@ -1,5 +1,5 @@
 import { LocateFixed } from 'lucide-react'
-import { Map as MapLibreMap, Marker, NavigationControl } from 'maplibre-gl'
+import { Map as MapLibreMap, Marker, NavigationControl, type StyleSpecification } from 'maplibre-gl'
 import { useEffect, useRef, useState } from 'react'
 import type { PoolLocation } from '../types/location'
 import { LocationDetail } from './LocationDetail'
@@ -12,7 +12,19 @@ interface PoolMapProps {
   onCloseSelection: () => void
 }
 
-const mapStyle = 'https://tiles.openfreemap.org/styles/liberty'
+const mapStyle: StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap contributors</a>',
+    },
+  },
+  layers: [{ id: 'osm-basemap', type: 'raster', source: 'osm' }],
+}
 
 function markerClassName(location: PoolLocation) {
   return `map-marker map-marker--${location.capPolicy}`
@@ -54,7 +66,6 @@ export function PoolMap({
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<MapLibreMap | null>(null)
   const markers = useRef<Marker[]>([])
-  const [mapReady, setMapReady] = useState(false)
   const [mapError, setMapError] = useState(false)
 
   useEffect(() => {
@@ -70,31 +81,9 @@ export function PoolMap({
     })
 
     instance.addControl(new NavigationControl({ showCompass: false }), 'top-right')
-    const drawInitialMarkers = () => {
-      setMapReady(true)
-      markers.current.forEach((marker) => marker.remove())
-      markers.current = createMarkers(instance, locations, onSelectLocation)
-    }
-    const markMapReady = () => {
-      setMapReady(true)
-      if (markers.current.length === 0) {
-        markers.current = createMarkers(instance, locations, onSelectLocation)
-      }
-    }
-    const ensureMarkers = () => {
-      if (instance.isStyleLoaded()) markMapReady()
-    }
-    instance.on('load', drawInitialMarkers)
-    // Some public styles finish their first render through `idle` after the
-    // initial load event. Keep the marker layer resilient to both timings.
-    instance.on('idle', ensureMarkers)
-    instance.on('styledata', ensureMarkers)
-    instance.on('render', ensureMarkers)
+    setMapError(false)
     instance.on('error', () => setMapError(true))
     map.current = instance
-    // Markers can be created before the remote style finishes; MapLibre will
-    // reposition them as soon as the map has its first render.
-    markers.current = createMarkers(instance, locations, onSelectLocation)
 
     return () => {
       markers.current.forEach((marker) => marker.remove())
@@ -109,7 +98,7 @@ export function PoolMap({
 
     markers.current.forEach((marker) => marker.remove())
     markers.current = createMarkers(map.current, locations, onSelectLocation)
-  }, [locations, mapReady, onSelectLocation])
+  }, [locations, onSelectLocation])
 
   useEffect(() => {
     if (!selectedLocation || !map.current) return
@@ -118,7 +107,7 @@ export function PoolMap({
       zoom: Math.max(map.current.getZoom(), 10.2),
       duration: 700,
     })
-  }, [mapReady, selectedLocation])
+  }, [selectedLocation])
 
   const resetMap = () => {
     map.current?.flyTo({ center: [121, 23.75], zoom: 6.35, duration: 700 })
@@ -140,7 +129,7 @@ export function PoolMap({
       </div>
       {mapError && (
         <div className="map-error" role="status">
-          地圖底圖暫時無法載入，仍可使用左側清單瀏覽資料。
+          部分地圖底圖無法載入，請確認網路後重新整理，或切換清單瀏覽地點。
         </div>
       )}
       {selectedLocation && (

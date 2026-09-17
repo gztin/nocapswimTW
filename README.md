@@ -60,4 +60,4 @@ src/
 
 ## 資料與地圖提醒
 
-地圖底圖使用公開的 OpenFreeMap style，瀏覽器需要網路連線才能載入圖磚。正式上線前，建議評估穩定性、流量限制與適合台灣地區的地圖服務方案。
+地圖使用 MapLibre 顯示 OpenStreetMap 標準 raster 圖磚，不需 Google API Key。瀏覽器需要網路連線，地圖保留 OpenStreetMap attribution。公開圖磚不提供服務保證；請遵守 https://operations.osmfoundation.org/policies/tiles/ ，不要預抓或大量下載、不要封鎖 Referer，並保留瀏覽器快取。流量成長時應改用適當的圖磚供應商。
