@@ -4,7 +4,6 @@ import type { PoolLocation } from '../types/location'
 import { SOURCE_TYPE_LABELS } from '../types/location'
 import { formatPhone, formatVerifiedDate, getGoogleMapsUrl } from '../utils/location'
 import { CopyButton } from './CopyButton'
-import { LocationImage } from './LocationImage'
 import { StatusBadge } from './StatusBadge'
 
 interface LocationDetailProps {
@@ -47,13 +46,6 @@ export function LocationDetail({
         </button>
 
         <div className="detail-scroll-content">
-          <LocationImage
-            className="detail-image"
-            imageUrl={location.imageUrl}
-            alt={`${location.name}泳池`}
-            loading="eager"
-          />
-
           <div className="detail-heading">
             <span className="eyebrow">地點詳細資料</span>
             <h2 id="location-detail-title">{location.name}</h2>
