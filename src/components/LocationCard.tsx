@@ -1,23 +1,23 @@
-import { CalendarDays, ChevronRight, MapPin } from 'lucide-react'
+import { CalendarDays, ChevronRight } from 'lucide-react'
 import type { PoolLocation } from '../types/location'
-import { SOURCE_TYPE_LABELS } from '../types/location'
 import { formatVerifiedDate } from '../utils/location'
+import { LocationImage } from './LocationImage'
 import { StatusBadge } from './StatusBadge'
 
 interface LocationCardProps {
   location: PoolLocation
-  selected?: boolean
   onSelect: (location: PoolLocation) => void
 }
 
-export function LocationCard({ location, selected = false, onSelect }: LocationCardProps) {
+export function LocationCard({ location, onSelect }: LocationCardProps) {
   const verificationText = location.lastVerified
     ? `最後確認：${formatVerifiedDate(location.lastVerified)}`
     : formatVerifiedDate(location.lastVerified)
+  const placeText = [location.city, location.district].filter(Boolean).join('・')
 
   return (
     <article
-      className={`location-card ${selected ? 'is-selected' : ''}`}
+      className="location-card"
       role="button"
       tabIndex={0}
       onClick={() => onSelect(location)}
@@ -29,33 +29,27 @@ export function LocationCard({ location, selected = false, onSelect }: LocationC
       }}
       aria-label={`查看${location.name}詳細資料`}
     >
-      <div className="card-heading">
-        <div>
-          <h3>{location.name}</h3>
+      <LocationImage
+        className="location-card-image"
+        imageUrl={location.imageUrl}
+        alt={`${location.name}泳池`}
+      />
+      <div className="location-card-content">
+        <div className="card-heading">
+          <div>
+            <h3>{location.name}</h3>
+            <p className="location-place">{placeText}</p>
+          </div>
+          <ChevronRight className="card-chevron" size={19} aria-hidden="true" />
         </div>
-        <ChevronRight className="card-chevron" size={19} aria-hidden="true" />
-      </div>
-      <StatusBadge policy={location.capPolicy} />
-      <p className="location-address">
-        <MapPin size={15} aria-hidden="true" />
-        {location.address}
-      </p>
-      <div className="card-meta">
-        <span className={location.lastVerified ? '' : 'is-stale'}>
-          <CalendarDays size={14} aria-hidden="true" />
-          {verificationText}
-        </span>
-        <span className="source-label">來源：{SOURCE_TYPE_LABELS[location.sourceType]}</span>
-      </div>
-      {!!location.restrictions?.length && (
-        <div className="tag-list" aria-label="使用限制">
-          {location.restrictions.map((restriction) => (
-            <span className="restriction-tag" key={restriction}>
-              {restriction}
-            </span>
-          ))}
+        <StatusBadge policy={location.capPolicy} />
+        <div className="card-meta">
+          <span className={!location.lastVerified ? 'is-stale' : ''}>
+            <CalendarDays size={14} aria-hidden="true" />
+            {verificationText}
+          </span>
         </div>
-      )}
+      </div>
     </article>
   )
 }

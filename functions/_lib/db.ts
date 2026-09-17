@@ -9,11 +9,13 @@ export interface LocationRow {
   region: PoolLocation['region']
   address: string
   phone: string | null
+  image_url: string | null
   latitude: number | null
   longitude: number | null
   cap_policy: PoolLocation['capPolicy']
   restrictions: string | null
   source_type: PoolLocation['sourceType']
+  source_name: string | null
   source_url: string | null
   last_verified: string | null
   notes: string | null
@@ -65,11 +67,13 @@ export function mapLocation(row: LocationRow): PoolLocation {
     region: row.region,
     address: row.address,
     phone: row.phone ?? undefined,
+    imageUrl: row.image_url ?? undefined,
     latitude: row.latitude === null ? null : Number(row.latitude),
     longitude: row.longitude === null ? null : Number(row.longitude),
     capPolicy: row.cap_policy,
     restrictions: parseRestrictions(row.restrictions),
     sourceType: row.source_type,
+    sourceName: row.source_name ?? undefined,
     sourceUrl: row.source_url ?? undefined,
     lastVerified: row.last_verified ?? undefined,
     notes: row.notes ?? undefined,

@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { PoolLocation, Region, ViewMode } from '../types/location'
+import type { PoolLocation, Region } from '../types/location'
 
 export type RegionFilter = Region | 'all'
 
 interface FilterState {
   query: string
   region: RegionFilter
-  view: ViewMode
 }
 
 const validRegions: RegionFilter[] = ['all', 'north', 'central', 'south', 'east', 'islands']
@@ -14,12 +13,9 @@ const validRegions: RegionFilter[] = ['all', 'north', 'central', 'south', 'east'
 function readUrlState(): FilterState {
   const params = new URLSearchParams(window.location.search)
   const urlRegion = params.get('region') as RegionFilter | null
-  const urlView = params.get('view') as ViewMode | null
-
   return {
     query: params.get('q') ?? '',
     region: urlRegion && validRegions.includes(urlRegion) ? urlRegion : 'all',
-    view: urlView === 'map' ? 'map' : 'list',
   }
 }
 
@@ -27,8 +23,6 @@ function writeUrlState(state: FilterState) {
   const params = new URLSearchParams()
   if (state.query.trim()) params.set('q', state.query.trim())
   if (state.region !== 'all') params.set('region', state.region)
-  if (state.view !== 'list') params.set('view', state.view)
-
   const queryString = params.toString()
   const nextUrl = `${window.location.pathname}${queryString ? `?${queryString}` : ''}${window.location.hash}`
   window.history.replaceState(null, '', nextUrl)
@@ -66,6 +60,5 @@ export function useLocationFilters(allLocations: PoolLocation[]) {
     filteredLocations,
     setQuery: (query: string) => setState((current) => ({ ...current, query })),
     setRegion: (region: RegionFilter) => setState((current) => ({ ...current, region })),
-    setView: (view: ViewMode) => setState((current) => ({ ...current, view })),
   }
 }

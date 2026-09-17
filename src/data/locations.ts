@@ -5,7 +5,7 @@ import type { PoolLocation } from '../types/location'
  * 這些資料尚未逐筆向場館核對，前往前請再次確認泳帽與泳池規則。
  * 此檔案與 migrations/0003_replace_sample_seed_add_phone_and_rate_limit.sql 對照。
  */
-export const locations: PoolLocation[] = [
+export const locations: PoolLocation[] = ([
   {
     id: 'mandarin-oriental-taipei', name: '台北文華東方酒店', city: '台北市', district: '松山區', region: 'north',
     address: '台北市松山區敦化北路158號', phone: '+886-2-2715-6888', latitude: null, longitude: null,
@@ -191,4 +191,7 @@ export const locations: PoolLocation[] = [
     address: '澎湖縣馬公市新店路197號', phone: '+886-6-926-6288', latitude: null, longitude: null,
     capPolicy: 'not-required', sourceType: 'community', sourceUrl: 'https://www.fourpoints-penghu.com/',
   },
-]
+ ] satisfies PoolLocation[]).map((location) => ({
+  ...location,
+  sourceName: '熱血史丹利大叔應援團',
+}))

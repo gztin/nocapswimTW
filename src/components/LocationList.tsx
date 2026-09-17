@@ -4,25 +4,17 @@ import { LocationCard } from './LocationCard'
 
 interface LocationListProps {
   locations: PoolLocation[]
-  selectedLocation?: PoolLocation | null
   onSelect: (location: PoolLocation) => void
-  sidebar?: boolean
 }
 
 export function LocationList({
   locations,
-  selectedLocation,
   onSelect,
-  sidebar = false,
 }: LocationListProps) {
   return (
-    <section className={`location-list ${sidebar ? 'location-list--sidebar' : ''}`}>
+    <section className="location-list" aria-labelledby="location-list-title">
       <div className="list-heading">
-        <div>
-          <p className="eyebrow">公開清單</p>
-          <h2>{locations.length} 個地點</h2>
-        </div>
-        <span className="list-sort">依地區</span>
+        <h2 id="location-list-title">地點清單</h2>
       </div>
       {locations.length > 0 ? (
         <div className="location-card-list">
@@ -30,7 +22,6 @@ export function LocationList({
             <LocationCard
               key={location.id}
               location={location}
-              selected={selectedLocation?.id === location.id}
               onSelect={onSelect}
             />
           ))}

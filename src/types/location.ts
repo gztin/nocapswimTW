@@ -4,8 +4,6 @@ export type CapPolicy = 'not-required' | 'conditional' | 'unknown'
 
 export type SourceType = 'official' | 'phone' | 'onsite' | 'community'
 
-export type ViewMode = 'list' | 'map'
-
 export interface PoolLocation {
   id: string
   name: string
@@ -14,11 +12,13 @@ export interface PoolLocation {
   region: Region
   address: string
   phone?: string
+  imageUrl?: string
   latitude: number | null
   longitude: number | null
   capPolicy: CapPolicy
   restrictions?: string[]
   sourceType: SourceType
+  sourceName?: string
   sourceUrl?: string
   lastVerified?: string
   notes?: string

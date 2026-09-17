@@ -1,15 +1,14 @@
 # No Cap Swim TW
 
-「免泳帽泳池地圖」是台灣不強制配戴泳帽的飯店與泳池公開清單 MVP，讓使用者可以透過清單或地圖快速尋找地點。
+「免泳帽泳池清單」是台灣不強制配戴泳帽的飯店與泳池公開清單 MVP，讓使用者可以透過搜尋、地區篩選與文字分享快速尋找地點。
 
-目前版本使用 Cloudflare D1 儲存公開地點，收錄可由飯店官方公開規範核對的真實地點；`src/data/locations.ts` 僅供 seed 對照。泳帽與泳池開放規則可能因季節、活動或現場管理而變動，前往前請再次向場館確認。
+目前版本使用 Cloudflare D1 儲存公開地點，收錄可由飯店官方公開規範核對的真實地點；`src/data/locations.ts` 僅供 seed 對照。地點圖片使用 optional `imageUrl`，沒有圖片或圖片失效時會使用本地泳池水面 placeholder。泳帽與泳池開放規則可能因季節、活動或現場管理而變動，前往前請再次向場館確認。
 
 ## 技術架構
 
 - React
 - TypeScript
 - Vite
-- MapLibre GL JS
 - Lucide Icons
 - 一般 CSS
 - Cloudflare Pages Functions
@@ -50,7 +49,7 @@ npm run build
 
 ```text
 src/
-├── components/   # Header、搜尋、清單、地圖、詳細資料與回報表單
+├── components/   # Header、搜尋、清單、詳細資料與回報表單
 ├── api/          # 前端 API client
 ├── data/         # D1 seed 對應的公開資料，不是 production runtime source
 ├── hooks/        # URL query 與篩選狀態
@@ -68,15 +67,16 @@ functions/
 migrations/
 ├── 0001_initial.sql
 ├── 0002_seed_locations.sql       # 歷史 migration，保留不改寫
-└── 0003_replace_sample_seed_add_phone_and_rate_limit.sql
+├── 0003_replace_sample_seed_add_phone_and_rate_limit.sql
+├── 0004_add_location_image_url.sql
+└── 0005_add_location_source_name.sql
 ```
 
-搜尋、地區與視圖會同步到 URL query，例如 `?view=map&region=north&q=台北`，方便分享目前的篩選結果。
+搜尋與地區篩選會同步到 URL query，例如 `?region=north&q=台北`，方便分享目前的文字清單結果。
 
 ## Roadmap
 
 - Cloudflare Pages／D1 投稿審核 MVP（目前版本）
-- MapLibre Marker clustering
 - 更完整的地點搜尋與導航體驗
 
 ## D1 與 Cloudflare 設定
@@ -103,7 +103,7 @@ Cloudflare Pages 的 Variables／Secrets 需要設定：
 
 `wrangler.toml` 的 `DB` binding 名稱必須維持為 `DB`。若使用 Cloudflare Dashboard 綁定 D1，也請使用相同的 binding name。
 
-`0003_replace_sample_seed_add_phone_and_rate_limit.sql` 會移除原本四筆範例資料，改以附件整理的 35 筆飯店資料作為基礎清單，並新增電話欄位與投稿頻率限制表。`0002_seed_locations.sql` 是已存在的歷史 migration，不直接改寫；新資料庫依序套用後，最終資料仍是 35 筆。前台 production 只讀 `/api/locations`，不會直接載入 `src/data/locations.ts`，也不會載入前端假資料。
+`0003_replace_sample_seed_add_phone_and_rate_limit.sql` 會移除原本四筆範例資料，改以附件整理的 35 筆飯店資料作為基礎清單，並新增電話欄位與投稿頻率限制表。`0004_add_location_image_url.sql` 新增 nullable 的 `image_url` 欄位；`0005_add_location_source_name.sql` 將目前 35 筆資料的來源名稱補為「熱血史丹利大叔應援團」。兩個 migration 都不會要求既有資料填入圖片。`0002_seed_locations.sql` 是已存在的歷史 migration，不直接改寫；新資料庫依序套用後，最終資料仍是 35 筆。前台 production 只讀 `/api/locations`，不會直接載入 `src/data/locations.ts`，也不會載入前端假資料。
 
 部署 Pages：
 
@@ -120,6 +120,8 @@ npm run deploy
 - `GET /api/locations`
 - `POST /api/submissions`
 - `POST /api/submissions/bulk`
+
+`GET /api/locations` 回傳的地點可包含 `imageUrl` 與 `sourceName`；兩者皆可為空，前端會在沒有圖片或圖片載入失敗時使用 `public/images/pool-placeholder.webp`。投稿流程目前不開放圖片上傳。
 
 管理 API 需要 admin cookie：
 
@@ -139,6 +141,6 @@ npm run deploy
 
 必要欄位為 `name`、`address`、`region`。可選欄位為 `city`、`district`、`phone`、`latitude`、`longitude`、`capPolicy`、`restrictions`、`sourceType`、`sourceUrl`、`notes`。附件使用的 `swim_cap_policy`、`source_type`、`website` 欄位也會自動轉換。檔案資料會先在瀏覽器解析並顯示逐列格式檢查結果，通過後才送到批次投稿 API。
 
-## 資料與地圖提醒
+## 資料與導航提醒
 
-地圖使用 MapLibre 顯示 OpenStreetMap 標準 raster 圖磚，不需 Google API Key。瀏覽器需要網路連線，地圖保留 OpenStreetMap attribution。公開圖磚不提供服務保證；請遵守 https://operations.osmfoundation.org/policies/tiles/ ，不要預抓或大量下載、不要封鎖 Referer，並保留瀏覽器快取。流量成長時應改用適當的圖磚供應商。
+網站以文字清單呈現地點資訊；詳細資料頁仍提供 Google Maps 導航外連，地址與泳帽規則請在前往前再次確認。

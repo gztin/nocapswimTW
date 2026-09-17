@@ -2,74 +2,32 @@ import { CalendarDays, ExternalLink, MapPin, Phone, ShieldAlert, X } from 'lucid
 import type { PoolLocation } from '../types/location'
 import { SOURCE_TYPE_LABELS } from '../types/location'
 import { formatVerifiedDate, getGoogleMapsUrl } from '../utils/location'
+import { LocationImage } from './LocationImage'
 import { StatusBadge } from './StatusBadge'
 import { useEffect } from 'react'
 
 interface LocationDetailProps {
   location: PoolLocation
-  compact?: boolean
   onClose?: () => void
-  onViewDetails?: () => void
   onReport?: () => void
 }
 
 export function LocationDetail({
   location,
-  compact = false,
   onClose,
-  onViewDetails,
   onReport,
 }: LocationDetailProps) {
   const verifiedText = formatVerifiedDate(location.lastVerified)
+  const sourceLabel = location.sourceName ?? SOURCE_TYPE_LABELS[location.sourceType]
 
   useEffect(() => {
-    if (compact || !onClose) return
+    if (!onClose) return
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [compact, onClose])
-
-  if (compact) {
-    return (
-      <div className="location-detail location-detail--compact">
-        <div className="compact-detail-header">
-          <div>
-            <h3>{location.name}</h3>
-          </div>
-          {onClose && (
-            <button className="icon-button" type="button" onClick={onClose} aria-label="關閉地點預覽">
-              <X size={18} />
-            </button>
-          )}
-        </div>
-        <StatusBadge policy={location.capPolicy} compact />
-        <p className="location-address">
-          <MapPin size={15} aria-hidden="true" />
-          {location.address}
-        </p>
-        <div className="compact-detail-meta">
-          <span className={!location.lastVerified ? 'is-stale' : ''}>
-            <CalendarDays size={14} aria-hidden="true" />
-            {location.lastVerified ? `最後確認 ${verifiedText}` : verifiedText}
-          </span>
-          {!!location.restrictions?.length && (
-            <div className="tag-list">
-              {location.restrictions.map((restriction) => (
-                <span className="restriction-tag" key={restriction}>
-                  {restriction}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-        <button className="button button--primary button--full" type="button" onClick={onViewDetails}>
-          查看詳細資料
-        </button>
-      </div>
-    )
-  }
+  }, [onClose])
 
   const mapsUrl = getGoogleMapsUrl(location.latitude, location.longitude, location.address)
 
@@ -93,6 +51,12 @@ export function LocationDetail({
         </div>
 
         <div className="detail-scroll-content">
+          <LocationImage
+            className="detail-image"
+            imageUrl={location.imageUrl}
+            alt={`${location.name}泳池`}
+            loading="eager"
+          />
           <StatusBadge policy={location.capPolicy} />
           <div className="detail-address">
             <MapPin size={17} aria-hidden="true" />
@@ -107,7 +71,7 @@ export function LocationDetail({
             <div>
               <dt>資料來源</dt>
               <dd>
-                {SOURCE_TYPE_LABELS[location.sourceType]}
+                {sourceLabel}
                 {location.sourceUrl && (
                   <a className="source-link" href={location.sourceUrl} target="_blank" rel="noreferrer">
                     查看來源
@@ -144,7 +108,8 @@ export function LocationDetail({
           <div className="detail-note">
             <ShieldAlert size={17} aria-hidden="true" />
             <p>
-              {location.sourceType === 'community' && '此資訊來自網友回報，建議前往前再次向場館確認。'}
+              {location.sourceName && `資料由${location.sourceName}整理，建議前往前再次向場館確認。`}
+              {!location.sourceName && location.sourceType === 'community' && '此資訊來自網友回報，建議前往前再次向場館確認。'}
               {location.sourceType !== 'community' && (location.notes ?? '規則可能隨場館安排變動，前往前建議再次確認。')}
             </p>
           </div>

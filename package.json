@@ -15,7 +15,6 @@
   "dependencies": {
     "@vitejs/plugin-react": "latest",
     "lucide-react": "latest",
-    "maplibre-gl": "latest",
     "react": "latest",
     "react-dom": "latest"
   },

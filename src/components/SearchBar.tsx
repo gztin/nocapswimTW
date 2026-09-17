@@ -13,8 +13,8 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="搜尋飯店、泳池或地區"
-        aria-label="搜尋飯店、泳池或地區"
+        placeholder="搜尋飯店、縣市或地區"
+        aria-label="搜尋飯店、縣市或地區"
       />
       {value && (
         <button

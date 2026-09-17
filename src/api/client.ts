@@ -53,7 +53,12 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export function fetchLocations() {
-  return requestJson<PoolLocation[]>('/api/locations')
+  return requestJson<PoolLocation[]>('/api/locations').then((locations) => {
+    if (!Array.isArray(locations)) {
+      throw new ApiError('地點資料格式不正確，請稍後再試。', 500, 'invalid-locations-response')
+    }
+    return locations
+  })
 }
 
 export function createSubmission(payload: SubmissionPayload) {
