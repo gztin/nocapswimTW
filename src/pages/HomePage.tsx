@@ -13,6 +13,9 @@ interface HomePageProps {
   view: ViewMode
   filteredLocations: PoolLocation[]
   selectedLocation: PoolLocation | null
+  loading: boolean
+  error: string | null
+  onRetry: () => void
   onQueryChange: (query: string) => void
   onRegionChange: (region: RegionFilter) => void
   onViewChange: (view: ViewMode) => void
@@ -28,6 +31,9 @@ export function HomePage({
   view,
   filteredLocations,
   selectedLocation,
+  loading,
+  error,
+  onRetry,
   onQueryChange,
   onRegionChange,
   onViewChange,
@@ -57,12 +63,23 @@ export function HomePage({
         </div>
       </section>
 
-      <div className="demo-notice">
+      <div className="data-notice">
         <Info size={17} aria-hidden="true" />
-        <span>目前為示範資料，實際泳帽規則可能變動，前往前請再次向場館確認。</span>
+        <span>資料整理自飯店官方公開規範；泳帽與泳池開放規則可能變動，前往前請再次向場館確認。</span>
       </div>
 
-      {view === 'list' ? (
+      {loading ? (
+        <div className="status-state" role="status">
+          <strong>正在載入地點資料⋯</strong>
+          <p>請稍候片刻。</p>
+        </div>
+      ) : error ? (
+        <div className="status-state status-state--error" role="alert">
+          <strong>地點資料暫時無法載入</strong>
+          <p>{error}</p>
+          <button className="button button--outline" type="button" onClick={onRetry}>重新載入</button>
+        </div>
+      ) : view === 'list' ? (
         <LocationList locations={filteredLocations} onSelect={onSelectListLocation} />
       ) : (
         <section className="map-layout" aria-label="地圖檢視">

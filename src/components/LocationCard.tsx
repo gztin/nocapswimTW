@@ -31,7 +31,6 @@ export function LocationCard({ location, selected = false, onSelect }: LocationC
     >
       <div className="card-heading">
         <div>
-          {location.isDemo && <span className="demo-label">示範資料</span>}
           <h3>{location.name}</h3>
         </div>
         <ChevronRight className="card-chevron" size={19} aria-hidden="true" />

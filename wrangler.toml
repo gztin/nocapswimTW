@@ -1,0 +1,11 @@
+name = "nocapswimtw"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-09-17"
+
+[vars]
+ENVIRONMENT = "production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nocapswimtw"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"

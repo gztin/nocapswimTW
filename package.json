@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && tsc -p functions/tsconfig.json --noEmit && vite build",
+    "dev:pages": "npm run build && wrangler pages dev",
+    "d1:migrate:local": "wrangler d1 migrations apply DB --local",
+    "d1:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "deploy": "npm run build && wrangler pages deploy dist",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -16,9 +20,11 @@
     "react-dom": "latest"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260917.1",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "typescript": "latest",
-    "vite": "latest"
+    "vite": "latest",
+    "wrangler": "^4.133.0"
   }
 }

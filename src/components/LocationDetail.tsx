@@ -36,7 +36,6 @@ export function LocationDetail({
       <div className="location-detail location-detail--compact">
         <div className="compact-detail-header">
           <div>
-            {location.isDemo && <span className="demo-label">示範資料</span>}
             <h3>{location.name}</h3>
           </div>
           {onClose && (
@@ -72,7 +71,7 @@ export function LocationDetail({
     )
   }
 
-  const mapsUrl = getGoogleMapsUrl(location.latitude, location.longitude)
+  const mapsUrl = getGoogleMapsUrl(location.latitude, location.longitude, location.address)
 
   return (
     <div className="detail-backdrop" role="presentation" onMouseDown={onClose}>
@@ -87,7 +86,6 @@ export function LocationDetail({
           <div>
             <span className="eyebrow">地點詳細資料</span>
             <h2 id="location-detail-title">{location.name}</h2>
-            {location.isDemo && <span className="demo-label">示範資料</span>}
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="關閉詳細資料">
             <X size={20} />
@@ -108,7 +106,14 @@ export function LocationDetail({
             </div>
             <div>
               <dt>資料來源</dt>
-              <dd>{SOURCE_TYPE_LABELS[location.sourceType]}</dd>
+              <dd>
+                {SOURCE_TYPE_LABELS[location.sourceType]}
+                {location.sourceUrl && (
+                  <a className="source-link" href={location.sourceUrl} target="_blank" rel="noreferrer">
+                    查看來源
+                  </a>
+                )}
+              </dd>
             </div>
           </dl>
 
@@ -129,7 +134,10 @@ export function LocationDetail({
 
           <div className="detail-note">
             <ShieldAlert size={17} aria-hidden="true" />
-            <p>{location.notes ?? '規則可能隨場館安排變動，前往前建議再次確認。'}</p>
+            <p>
+              {location.sourceType === 'community' && '此資訊來自網友回報，建議前往前再次向場館確認。'}
+              {location.sourceType !== 'community' && (location.notes ?? '規則可能隨場館安排變動，前往前建議再次確認。')}
+            </p>
           </div>
 
           <a className="external-map-link" href={mapsUrl} target="_blank" rel="noreferrer">

@@ -13,15 +13,14 @@ export interface PoolLocation {
   district?: string
   region: Region
   address: string
-  latitude: number
-  longitude: number
+  latitude: number | null
+  longitude: number | null
   capPolicy: CapPolicy
   restrictions?: string[]
   sourceType: SourceType
   sourceUrl?: string
   lastVerified?: string
   notes?: string
-  isDemo?: boolean
 }
 
 export const REGION_LABELS: Record<Region | 'all', string> = {
@@ -42,6 +41,6 @@ export const CAP_POLICY_LABELS: Record<CapPolicy, string> = {
 export const SOURCE_TYPE_LABELS: Record<SourceType, string> = {
   official: '官方網站',
   phone: '電話確認',
-  onsite: '現場',
+  onsite: '現場確認',
   community: '網友回報',
 }

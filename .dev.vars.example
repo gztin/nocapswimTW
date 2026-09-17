@@ -1,0 +1,4 @@
+ENVIRONMENT=development
+ADMIN_PASSWORD=replace-with-a-local-admin-password
+# Optional for local Turnstile verification.
+# TURNSTILE_SECRET_KEY=your-turnstile-secret-key

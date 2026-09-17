@@ -35,7 +35,9 @@ function createMarkers(
   locations: PoolLocation[],
   onSelectLocation: (location: PoolLocation) => void,
 ) {
-  return locations.map((location) => {
+  return locations.flatMap((location) => {
+    if (location.latitude === null || location.longitude === null) return []
+    const { latitude, longitude } = location
     const element = document.createElement('button')
     element.type = 'button'
     element.className = markerClassName(location)
@@ -44,15 +46,15 @@ function createMarkers(
     element.addEventListener('click', () => {
       onSelectLocation(location)
       map.flyTo({
-        center: [location.longitude, location.latitude],
+        center: [longitude, latitude],
         zoom: Math.max(map.getZoom(), 10.2),
         duration: 700,
       })
     })
 
-    return new Marker({ element, anchor: 'bottom' })
-      .setLngLat([location.longitude, location.latitude])
-      .addTo(map)
+    return [new Marker({ element, anchor: 'bottom' })
+      .setLngLat([longitude, latitude])
+      .addTo(map)]
   })
 }
 
@@ -101,7 +103,7 @@ export function PoolMap({
   }, [locations, onSelectLocation])
 
   useEffect(() => {
-    if (!selectedLocation || !map.current) return
+    if (!selectedLocation || !map.current || selectedLocation.latitude === null || selectedLocation.longitude === null) return
     map.current.flyTo({
       center: [selectedLocation.longitude, selectedLocation.latitude],
       zoom: Math.max(map.current.getZoom(), 10.2),
