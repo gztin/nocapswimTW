@@ -70,7 +70,8 @@ migrations/
 ├── 0003_replace_sample_seed_add_phone_and_rate_limit.sql
 ├── 0004_add_location_image_url.sql
 ├── 0005_add_location_source_name.sql
-└── 0006_split_official_and_source_urls.sql
+├── 0006_split_official_and_source_urls.sql
+└── 0007_add_admin_users_and_sessions.sql
 ```
 
 搜尋與地區篩選會同步到 URL query，例如 `?region=north&q=台北`，方便分享目前的文字清單結果。
@@ -97,14 +98,14 @@ npm run d1:migrate:remote
 
 Cloudflare Pages 的 Variables／Secrets 需要設定：
 
-- `ADMIN_PASSWORD`：Secret，管理後台密碼，不會進入前端 bundle。
+- `ADMIN_PASSWORD`：Secret，僅用於第一次以 `owner` 帳號登入時建立主要管理員；建立後請在後台修改密碼，之後可移除這個 Secret，不會進入前端 bundle。
 - `TURNSTILE_SECRET_KEY`：Secret，投稿 API 的 server-side Turnstile 驗證金鑰。
 - `VITE_TURNSTILE_SITE_KEY`：Build-time variable，前端 Turnstile widget 的 site key。
 - `ENVIRONMENT=production`：production 必須設定；沒有 `TURNSTILE_SECRET_KEY` 時投稿會拒絕，不會略過驗證。
 
 `wrangler.toml` 的 `DB` binding 名稱必須維持為 `DB`。若使用 Cloudflare Dashboard 綁定 D1，也請使用相同的 binding name。
 
-`0003_replace_sample_seed_add_phone_and_rate_limit.sql` 會移除原本四筆範例資料，改以附件整理的 35 筆飯店資料作為基礎清單，並新增電話欄位與投稿頻率限制表。`0004_add_location_image_url.sql` 新增 nullable 的 `image_url` 欄位；`0005_add_location_source_name.sql` 將目前 35 筆資料的來源名稱補為「熱血史丹利大叔應援團」；`0006_split_official_and_source_urls.sql` 將飯店官網與免泳帽情報來源拆成 `official_url` 與 `source_url`，並為投稿保留相同的欄位語意。這些 migration 都不會要求既有資料填入圖片。`0002_seed_locations.sql` 是已存在的歷史 migration，不直接改寫；新資料庫依序套用後，最終資料仍是 35 筆。前台 production 只讀 `/api/locations`，不會直接載入 `src/data/locations.ts`，也不會載入前端假資料。
+`0003_replace_sample_seed_add_phone_and_rate_limit.sql` 會移除原本四筆範例資料，改以附件整理的 35 筆飯店資料作為基礎清單，並新增電話欄位與投稿頻率限制表。`0004_add_location_image_url.sql` 新增 nullable 的 `image_url` 欄位；`0005_add_location_source_name.sql` 將目前 35 筆資料的來源名稱補為「熱血史丹利大叔應援團」；`0006_split_official_and_source_urls.sql` 將飯店官網與免泳帽情報來源拆成 `official_url` 與 `source_url`，並為投稿保留相同的欄位語意；`0007_add_admin_users_and_sessions.sql` 新增管理員帳號、加密密碼、登入工作階段與登入嘗試限制表。這些 migration 都不會要求既有資料填入圖片。`0002_seed_locations.sql` 是已存在的歷史 migration，不直接改寫；新資料庫依序套用後，最終資料仍是 35 筆。前台 production 只讀 `/api/locations`，不會直接載入 `src/data/locations.ts`，也不會載入前端假資料。
 
 部署 Pages：
 
@@ -128,11 +129,16 @@ npm run deploy
 
 - `POST /api/admin/login`
 - `POST /api/admin/logout`
+- `GET /api/admin/me`
+- `POST /api/admin/password`
+- `GET /api/admin/users`（主要管理員）
+- `POST /api/admin/users`（主要管理員新增協作管理者）
+- `POST /api/admin/users/:id/deactivate`（主要管理員）
 - `GET /api/admin/submissions`
 - `POST /api/admin/submissions/:id/approve`
 - `POST /api/admin/submissions/:id/reject`
 
-管理者由 `/admin` 進入；未登入會導向 `/admin/login`。核准新增地點時可在詳情頁補上 latitude／longitude，核准既有地點則更新對應 location，不會建立重複資料。
+管理者由 `/admin` 進入；未登入會導向 `/admin/login`。第一次部署完成並套用 `0007` 後，以 `owner` 和 `ADMIN_PASSWORD` 登入即可建立主要管理員，系統會要求立即設定新密碼。新密碼至少 6 個字元，且必須同時包含大小寫英文字母、數字與特殊符號，不可包含空白，最多 128 個字元。主要管理員可新增或停用協作管理者；協作管理者可以審核投稿，但不能管理其他管理員。核准新增地點時可在詳情頁補上 latitude／longitude，核准既有地點則更新對應 location，不會建立重複資料。
 
 投稿流程會在 server side 驗證欄位、長度、網址、Email、投稿類型與 Turnstile token；新增地點也會做 normalize 後的名稱／地址相似檢查。所有新投稿一律由 server 強制寫成 `pending`。批次投稿最多 50 筆、request body 最多 2 MiB；單筆投稿 request body 最多 32 KiB。瀏覽器端的 CSV／JSON 檔案最多 1 MiB，且每個 IP 每小時最多 5 次投稿請求。production 需要有效的 Turnstile token。
 

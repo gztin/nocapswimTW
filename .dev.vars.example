@@ -1,4 +1,5 @@
 ENVIRONMENT=development
+# First-login bootstrap secret for the owner account. Change it from /admin after login.
 ADMIN_PASSWORD=replace-with-a-local-admin-password
 # Optional for local Turnstile verification.
 # TURNSTILE_SECRET_KEY=your-turnstile-secret-key

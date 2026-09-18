@@ -1,11 +1,46 @@
 import type { CapPolicy, Region, SourceType } from '../../src/types/location'
 import type { ReportType } from '../../src/types/submission'
+import { ADMIN_PASSWORD_MAX_LENGTH, ADMIN_PASSWORD_MIN_LENGTH } from '../../src/types/admin'
 
 const REPORT_TYPES: ReportType[] = ['new-location', 'policy-change', 'address-error', 'other']
 const CAP_POLICIES: CapPolicy[] = ['not-required', 'conditional', 'unknown']
 const SOURCE_TYPES: SourceType[] = ['official', 'phone', 'onsite', 'community']
 const REGIONS: Region[] = ['north', 'central', 'south', 'east', 'islands']
 export const MAX_BULK_SUBMISSION_ITEMS = 50
+
+export { ADMIN_PASSWORD_MAX_LENGTH, ADMIN_PASSWORD_MIN_LENGTH }
+
+export function validateAdminPassword(value: unknown, label = '密碼'): string {
+  if (typeof value !== 'string') throw new ValidationError(`${label}格式不正確。`)
+  if (value.length < ADMIN_PASSWORD_MIN_LENGTH) {
+    throw new ValidationError(`${label}至少需要 ${ADMIN_PASSWORD_MIN_LENGTH} 個字元。`)
+  }
+  if (value.length > ADMIN_PASSWORD_MAX_LENGTH) {
+    throw new ValidationError(`${label}不可超過 ${ADMIN_PASSWORD_MAX_LENGTH} 個字元。`)
+  }
+  if (/\s/.test(value)) throw new ValidationError(`${label}不可包含空白字元。`)
+  if (!/[A-Z]/.test(value)) throw new ValidationError(`${label}需包含至少 1 個大寫英文字母。`)
+  if (!/[a-z]/.test(value)) throw new ValidationError(`${label}需包含至少 1 個小寫英文字母。`)
+  if (!/[0-9]/.test(value)) throw new ValidationError(`${label}需包含至少 1 個數字。`)
+  if (!/[^A-Za-z0-9\s]/.test(value)) throw new ValidationError(`${label}需包含至少 1 個特殊符號。`)
+  return value
+}
+
+export function validateAdminUsername(value: unknown): string {
+  if (typeof value !== 'string') throw new ValidationError('管理員帳號格式不正確。')
+  const username = value.trim().toLowerCase()
+  if (!/^[a-z0-9._-]{3,40}$/.test(username)) {
+    throw new ValidationError('管理員帳號需為 3～40 個英數字、句點、底線或連字號。')
+  }
+  return username
+}
+
+export function validateAdminDisplayName(value: unknown): string {
+  if (typeof value !== 'string') throw new ValidationError('顯示名稱格式不正確。')
+  const displayName = value.trim().replace(/\s+/g, ' ')
+  if (!displayName || displayName.length > 60) throw new ValidationError('顯示名稱需為 1～60 個字元。')
+  return displayName
+}
 
 const limits = {
   name: 160,

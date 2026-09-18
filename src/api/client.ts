@@ -1,4 +1,5 @@
 import type { PoolLocation } from '../types/location'
+import type { AdminUser } from '../types/admin'
 import type {
   ApprovalPayload,
   BulkSubmissionPayload,
@@ -75,15 +76,49 @@ export function createBulkSubmissions(payload: BulkSubmissionPayload) {
   })
 }
 
-export function adminLogin(password: string) {
-  return requestJson<{ ok: true }>('/api/admin/login', {
+export function adminLogin(username: string, password: string) {
+  return requestJson<{ ok: true; user: AdminUser }>('/api/admin/login', {
     method: 'POST',
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ username, password }),
   })
 }
 
 export function adminLogout() {
   return requestJson<{ ok: true }>('/api/admin/logout', { method: 'POST' })
+}
+
+export function fetchAdminMe() {
+  return requestJson<{ user: AdminUser }>('/api/admin/me')
+}
+
+export function changeAdminPassword(currentPassword: string, newPassword: string, confirmPassword: string) {
+  return requestJson<{ ok: true; requiresLogin: true }>('/api/admin/password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+  })
+}
+
+export function fetchAdminUsers() {
+  return requestJson<{ users: AdminUser[] }>('/api/admin/users')
+}
+
+export function createAdminUser(payload: {
+  username: string
+  displayName: string
+  password: string
+  confirmPassword: string
+}) {
+  return requestJson<{ user: AdminUser }>('/api/admin/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function deactivateAdminUser(id: string) {
+  return requestJson<{ ok: true }>(`/api/admin/users/${encodeURIComponent(id)}/deactivate`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
 }
 
 export function fetchAdminSubmissions(status?: SubmissionStatus) {

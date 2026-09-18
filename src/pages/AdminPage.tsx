@@ -1,7 +1,9 @@
 import { Check, ExternalLink, LoaderCircle, LogOut, RefreshCw, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ApiError, adminLogin, adminLogout, approveSubmission, fetchAdminSubmissions, rejectSubmission } from '../api/client'
+import { ApiError, adminLogin, adminLogout, approveSubmission, fetchAdminMe, fetchAdminSubmissions, rejectSubmission } from '../api/client'
+import { AdminAccountPanel } from '../components/AdminAccountPanel'
 import { CAP_POLICY_LABELS, SOURCE_TYPE_LABELS } from '../types/location'
+import type { AdminUser } from '../types/admin'
 import type { ApprovalPayload, Submission, SubmissionStatus } from '../types/submission'
 import { REPORT_TYPE_LABELS, SUBMISSION_STATUS_LABELS } from '../types/submission'
 
@@ -19,10 +21,11 @@ function displayValue(value: string | null | undefined) {
 }
 
 interface AdminLoginPageProps {
-  onLoggedIn: () => void
+  onLoggedIn: (user: AdminUser) => void
 }
 
 function AdminLoginPage({ onLoggedIn }: AdminLoginPageProps) {
+  const [username, setUsername] = useState('owner')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,8 +35,8 @@ function AdminLoginPage({ onLoggedIn }: AdminLoginPageProps) {
     setLoading(true)
     setError(null)
     try {
-      await adminLogin(password)
-      onLoggedIn()
+      const result = await adminLogin(username, password)
+      onLoggedIn(result.user)
     } catch (requestError) {
       setError(requestError instanceof ApiError ? requestError.message : '登入失敗，請稍後再試。')
     } finally {
@@ -47,15 +50,26 @@ function AdminLoginPage({ onLoggedIn }: AdminLoginPageProps) {
       <section className="admin-login-card">
         <p className="eyebrow">No Cap Swim TW</p>
         <h1>投稿管理</h1>
-        <p>請輸入管理員密碼以查看與審核投稿。</p>
+        <p>請輸入管理員帳號與密碼以查看與審核投稿。</p>
         <form onSubmit={submit}>
+          <label className="form-field">
+            <span>管理員帳號</span>
+            <input
+              autoFocus
+              type="text"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              autoComplete="username"
+              required
+            />
+          </label>
           <label className="form-field">
             <span>管理員密碼</span>
             <input
-              autoFocus
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
               required
             />
           </label>
@@ -192,6 +206,8 @@ function SubmissionDetail({ submission, busy, onApprove, onReject }: SubmissionD
 
 export function AdminPage() {
   const [mode, setMode] = useState<'login' | 'dashboard'>(window.location.pathname === '/admin/login' ? 'login' : 'dashboard')
+  const [currentAdmin, setCurrentAdmin] = useState<AdminUser | null>(null)
+  const [mustChangePassword, setMustChangePassword] = useState(false)
   const [activeStatus, setActiveStatus] = useState<SubmissionStatus>('pending')
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -218,9 +234,29 @@ export function AdminPage() {
     }
   }, [])
 
+  const loadAdminContext = useCallback(async () => {
+    try {
+      const result = await fetchAdminMe()
+      setCurrentAdmin(result.user)
+      setMustChangePassword(result.user.mustChangePassword)
+    } catch (requestError) {
+      if (requestError instanceof ApiError && requestError.status === 401) {
+        setCurrentAdmin(null)
+        setMustChangePassword(false)
+        setMode('login')
+        window.history.replaceState(null, '', '/admin/login')
+      } else {
+        setError(requestError instanceof ApiError ? requestError.message : '管理員資料載入失敗。')
+      }
+    }
+  }, [])
+
   useEffect(() => {
-    if (mode === 'dashboard') void loadSubmissions()
-  }, [loadSubmissions, mode])
+    if (mode === 'dashboard') {
+      void loadSubmissions()
+      void loadAdminContext()
+    }
+  }, [loadAdminContext, loadSubmissions, mode])
 
   const counts = useMemo(() => ({
     pending: submissions.filter((submission) => submission.status === 'pending').length,
@@ -231,13 +267,24 @@ export function AdminPage() {
   const visibleSubmissions = submissions.filter((submission) => submission.status === activeStatus)
   const selectedSubmission = submissions.find((submission) => submission.id === selectedId) ?? null
 
-  const loginSucceeded = () => {
+  const loginSucceeded = (user: AdminUser) => {
+    setCurrentAdmin(user)
+    setMustChangePassword(user.mustChangePassword)
     window.history.replaceState(null, '', '/admin')
     setMode('dashboard')
   }
 
   const logout = async () => {
     await adminLogout().catch(() => undefined)
+    setCurrentAdmin(null)
+    setMustChangePassword(false)
+    window.history.replaceState(null, '', '/admin/login')
+    setMode('login')
+  }
+
+  const passwordChanged = () => {
+    setCurrentAdmin(null)
+    setMustChangePassword(false)
     window.history.replaceState(null, '', '/admin/login')
     setMode('login')
   }
@@ -280,6 +327,11 @@ export function AdminPage() {
           <h1>投稿管理</h1>
         </div>
         <div className="admin-header-actions">
+          {currentAdmin && (
+            <span className="admin-identity">
+              {currentAdmin.displayName} · {currentAdmin.role === 'owner' ? '主要管理員' : '協作管理者'}
+            </span>
+          )}
           <button className="button button--outline" type="button" onClick={() => void loadSubmissions()} disabled={loading}>
             <RefreshCw size={16} aria-hidden="true" />
             重新整理
@@ -292,6 +344,14 @@ export function AdminPage() {
       </header>
 
       {error && <div className="admin-error" role="alert">{error}</div>}
+
+      {currentAdmin && (
+        <AdminAccountPanel
+          user={currentAdmin}
+          mustChangePassword={mustChangePassword}
+          onPasswordChanged={passwordChanged}
+        />
+      )}
 
       <nav className="admin-tabs" aria-label="投稿狀態">
         {statusTabs.map((status) => (
