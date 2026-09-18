@@ -4,7 +4,7 @@ import { errorResponse, json } from './response'
 
 const COOKIE_NAME = 'nocapswim_admin'
 const SESSION_SECONDS = 60 * 60 * 8
-const PASSWORD_HASH_ITERATIONS = 120_000
+const PASSWORD_HASH_ITERATIONS = 100_000
 const encoder = new TextEncoder()
 
 export interface AdminUserRow {

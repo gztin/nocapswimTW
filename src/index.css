@@ -255,10 +255,25 @@ h1 { margin-bottom: 0; font-size: clamp(27px, 3.2vw, 34px); line-height: 1.25; l
 .admin-user-actions .button { min-height: 30px; padding: 0 7px; font-size: 11px; }
 .admin-user-status { color: var(--subtle); font-size: 10px; white-space: nowrap; }
 .admin-user-status.is-active { color: var(--green); font-weight: 700; }
-.admin-tabs { display: flex; gap: 6px; margin-bottom: 14px; padding: 4px; border: 1px solid var(--border); border-radius: 9px; background: #f4f7f7; }
-.admin-tabs button { min-height: 38px; padding: 0 14px; color: var(--muted); border: 0; border-radius: 6px; background: transparent; font-size: 13px; font-weight: 700; }
-.admin-tabs button.is-active { color: var(--brand-dark); background: #fff; box-shadow: 0 2px 6px rgba(37, 63, 66, .1); }
-.admin-tabs button span { display: inline-grid; min-width: 20px; margin-left: 4px; padding: 2px 5px; border-radius: 999px; background: var(--gray-soft); font-size: 11px; }
+.admin-main-tabs, .admin-status-tabs { display: flex; gap: 6px; padding: 4px; border: 1px solid var(--border); border-radius: 9px; background: #f4f7f7; }
+.admin-main-tabs { margin-bottom: 18px; }
+.admin-main-tabs button, .admin-status-tabs button { min-height: 38px; padding: 0 14px; color: var(--muted); border: 0; border-radius: 6px; background: transparent; font-size: 13px; font-weight: 700; }
+.admin-main-tabs button { flex: 1; }
+.admin-main-tabs button.is-active, .admin-status-tabs button.is-active { color: var(--brand-dark); background: #fff; box-shadow: 0 2px 6px rgba(37, 63, 66, .1); }
+.admin-status-tabs { margin-bottom: 14px; }
+.admin-status-tabs button span { display: inline-grid; min-width: 20px; margin-left: 4px; padding: 2px 5px; border-radius: 999px; background: var(--gray-soft); font-size: 11px; }
+.admin-account-info-list { display: grid; gap: 8px; margin: 0; }
+.admin-account-info-list div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.admin-account-info-list div:last-child { padding-bottom: 0; border-bottom: 0; }
+.admin-account-info-list dt { color: var(--subtle); font-size: 11px; }
+.admin-account-info-list dd { margin: 0; color: var(--ink); font-size: 12px; font-weight: 700; text-align: right; }
+.admin-account-section--wide { grid-column: 1 / -1; }
+.admin-permission-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.admin-permission-row { display: flex; flex-direction: column; gap: 5px; padding: 11px; border: 1px solid var(--border); border-radius: 7px; background: #fbfcfc; }
+.admin-permission-row strong { color: var(--ink); font-size: 12px; }
+.admin-permission-row span { color: var(--muted); font-size: 11px; line-height: 1.55; }
+.admin-account-section--management { margin-top: 18px; }
+.admin-users-list-title { margin: 0 0 9px; color: var(--ink); font-size: 13px; }
 .admin-content { display: grid; grid-template-columns: minmax(0, 1fr) minmax(390px, .92fr); align-items: start; gap: 14px; }
 .admin-list-panel, .admin-detail-panel { min-width: 0; border: 1px solid var(--border); border-radius: 11px; background: var(--panel); box-shadow: var(--shadow); }
 .admin-list-panel { min-height: 380px; overflow: hidden; }
@@ -345,8 +360,10 @@ h1 { margin-bottom: 0; font-size: clamp(27px, 3.2vw, 34px); line-height: 1.25; l
   .admin-account-heading { flex-direction: column; gap: 9px; }
   .admin-account-section { padding: 13px; }
   .password-policy { grid-template-columns: 1fr; }
-  .admin-tabs { overflow-x: auto; }
-  .admin-tabs button { flex: 0 0 auto; }
+  .admin-main-tabs, .admin-status-tabs { overflow-x: auto; }
+  .admin-main-tabs button, .admin-status-tabs button { flex: 0 0 auto; }
+  .admin-main-tabs button { flex: 1 0 auto; }
+  .admin-permission-list { grid-template-columns: 1fr; }
   .admin-content { grid-template-columns: 1fr; }
   .admin-list-panel, .admin-empty--detail { min-height: 0; }
   .admin-empty { min-height: 170px; }

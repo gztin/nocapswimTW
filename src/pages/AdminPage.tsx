@@ -1,13 +1,14 @@
 import { Check, ExternalLink, LoaderCircle, LogOut, RefreshCw, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ApiError, adminLogin, adminLogout, approveSubmission, fetchAdminMe, fetchAdminSubmissions, rejectSubmission } from '../api/client'
-import { AdminAccountPanel } from '../components/AdminAccountPanel'
+import { AdminAccountSettingsPanel, AdminUserManagementPanel } from '../components/AdminAccountPanel'
 import { CAP_POLICY_LABELS, SOURCE_TYPE_LABELS } from '../types/location'
 import type { AdminUser } from '../types/admin'
 import type { ApprovalPayload, Submission, SubmissionStatus } from '../types/submission'
 import { REPORT_TYPE_LABELS, SUBMISSION_STATUS_LABELS } from '../types/submission'
 
 const statusTabs: SubmissionStatus[] = ['pending', 'approved', 'rejected']
+type AdminSection = 'review' | 'users' | 'settings'
 
 function formatSubmissionDate(value: string) {
   return new Intl.DateTimeFormat('zh-TW', {
@@ -208,6 +209,7 @@ export function AdminPage() {
   const [mode, setMode] = useState<'login' | 'dashboard'>(window.location.pathname === '/admin/login' ? 'login' : 'dashboard')
   const [currentAdmin, setCurrentAdmin] = useState<AdminUser | null>(null)
   const [mustChangePassword, setMustChangePassword] = useState(false)
+  const [activeSection, setActiveSection] = useState<AdminSection>('review')
   const [activeStatus, setActiveStatus] = useState<SubmissionStatus>('pending')
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -239,6 +241,7 @@ export function AdminPage() {
       const result = await fetchAdminMe()
       setCurrentAdmin(result.user)
       setMustChangePassword(result.user.mustChangePassword)
+      if (result.user.mustChangePassword) setActiveSection('settings')
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.status === 401) {
         setCurrentAdmin(null)
@@ -270,6 +273,7 @@ export function AdminPage() {
   const loginSucceeded = (user: AdminUser) => {
     setCurrentAdmin(user)
     setMustChangePassword(user.mustChangePassword)
+    setActiveSection(user.mustChangePassword ? 'settings' : 'review')
     window.history.replaceState(null, '', '/admin')
     setMode('dashboard')
   }
@@ -346,67 +350,111 @@ export function AdminPage() {
       {error && <div className="admin-error" role="alert">{error}</div>}
 
       {currentAdmin && (
-        <AdminAccountPanel
+        <nav className="admin-main-tabs" aria-label="管理後台功能" role="tablist">
+          <button
+            className={activeSection === 'review' ? 'is-active' : ''}
+            type="button"
+            role="tab"
+            aria-selected={activeSection === 'review'}
+            onClick={() => setActiveSection('review')}
+          >
+            審核內容
+          </button>
+          {currentAdmin.role === 'owner' && (
+            <button
+              className={activeSection === 'users' ? 'is-active' : ''}
+              type="button"
+              role="tab"
+              aria-selected={activeSection === 'users'}
+              onClick={() => setActiveSection('users')}
+            >
+              帳號管理
+            </button>
+          )}
+          <button
+            className={activeSection === 'settings' ? 'is-active' : ''}
+            type="button"
+            role="tab"
+            aria-selected={activeSection === 'settings'}
+            onClick={() => setActiveSection('settings')}
+          >
+            帳號設定
+          </button>
+        </nav>
+      )}
+
+      {currentAdmin && activeSection === 'settings' && (
+        <AdminAccountSettingsPanel
           user={currentAdmin}
           mustChangePassword={mustChangePassword}
           onPasswordChanged={passwordChanged}
         />
       )}
 
-      <nav className="admin-tabs" aria-label="投稿狀態">
-        {statusTabs.map((status) => (
-          <button
-            className={activeStatus === status ? 'is-active' : ''}
-            type="button"
-            key={status}
-            onClick={() => {
-              setActiveStatus(status)
-              const first = submissions.find((submission) => submission.status === status)
-              setSelectedId(first?.id ?? null)
-            }}
-          >
-            {SUBMISSION_STATUS_LABELS[status]} <span>{counts[status]}</span>
-          </button>
-        ))}
-      </nav>
+      {currentAdmin?.role === 'owner' && activeSection === 'users' && (
+        <AdminUserManagementPanel user={currentAdmin} />
+      )}
 
-      <section className="admin-content">
-        <div className="admin-list-panel">
-          {loading && !submissions.length ? (
-            <div className="admin-empty"><LoaderCircle className="spin" size={24} aria-hidden="true" /><span>載入投稿資料中...</span></div>
-          ) : visibleSubmissions.length ? (
-            <div className="admin-submission-list">
-              {visibleSubmissions.map((submission) => (
-                <button
-                  className={`admin-submission-row ${selectedId === submission.id ? 'is-selected' : ''}`}
-                  type="button"
-                  key={submission.id}
-                  onClick={() => setSelectedId(submission.id)}
-                >
-                  <span className="admin-submission-row-main">
-                    <strong>{displayValue(submission.name)}</strong>
-                    <small>{REPORT_TYPE_LABELS[submission.type]} · {formatSubmissionDate(submission.createdAt)}</small>
-                  </span>
-                  <span className="admin-submission-row-meta">{displayValue(submission.city)}</span>
-                </button>
-              ))}
+      {activeSection === 'review' && (
+        <>
+          <nav className="admin-status-tabs" aria-label="投稿狀態" role="tablist">
+            {statusTabs.map((status) => (
+              <button
+                className={activeStatus === status ? 'is-active' : ''}
+                type="button"
+                role="tab"
+                key={status}
+                aria-selected={activeStatus === status}
+                onClick={() => {
+                  setActiveStatus(status)
+                  const first = submissions.find((submission) => submission.status === status)
+                  setSelectedId(first?.id ?? null)
+                }}
+              >
+                {SUBMISSION_STATUS_LABELS[status]} <span>{counts[status]}</span>
+              </button>
+            ))}
+          </nav>
+
+          <section className="admin-content">
+            <div className="admin-list-panel">
+              {loading && !submissions.length ? (
+                <div className="admin-empty"><LoaderCircle className="spin" size={24} aria-hidden="true" /><span>載入投稿資料中...</span></div>
+              ) : visibleSubmissions.length ? (
+                <div className="admin-submission-list">
+                  {visibleSubmissions.map((submission) => (
+                    <button
+                      className={`admin-submission-row ${selectedId === submission.id ? 'is-selected' : ''}`}
+                      type="button"
+                      key={submission.id}
+                      onClick={() => setSelectedId(submission.id)}
+                    >
+                      <span className="admin-submission-row-main">
+                        <strong>{displayValue(submission.name)}</strong>
+                        <small>{REPORT_TYPE_LABELS[submission.type]} · {formatSubmissionDate(submission.createdAt)}</small>
+                      </span>
+                      <span className="admin-submission-row-meta">{displayValue(submission.city)}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="admin-empty"><strong>目前沒有{SUBMISSION_STATUS_LABELS[activeStatus]}投稿</strong><span>新的投稿會顯示在這裡。</span></div>
+              )}
             </div>
-          ) : (
-            <div className="admin-empty"><strong>目前沒有{SUBMISSION_STATUS_LABELS[activeStatus]}投稿</strong><span>新的投稿會顯示在這裡。</span></div>
-          )}
-        </div>
-        {selectedSubmission ? (
-          <SubmissionDetail
-            key={selectedSubmission.id}
-            submission={selectedSubmission}
-            busy={actionId === selectedSubmission.id}
-            onApprove={(payload) => void approve(payload)}
-            onReject={() => void reject()}
-          />
-        ) : (
-          <div className="admin-empty admin-empty--detail">選取一筆投稿查看詳情。</div>
-        )}
-      </section>
+            {selectedSubmission ? (
+              <SubmissionDetail
+                key={selectedSubmission.id}
+                submission={selectedSubmission}
+                busy={actionId === selectedSubmission.id}
+                onApprove={(payload) => void approve(payload)}
+                onReject={() => void reject()}
+              />
+            ) : (
+              <div className="admin-empty admin-empty--detail">選取一筆投稿查看詳情。</div>
+            )}
+          </section>
+        </>
+      )}
     </main>
   )
 }
