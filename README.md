@@ -133,12 +133,13 @@ npm run deploy
 - `POST /api/admin/password`
 - `GET /api/admin/users`（主要管理員）
 - `POST /api/admin/users`（主要管理員新增協作管理者）
+- `POST /api/admin/users/:id/password`（主要管理員重設協作管理者密碼）
 - `POST /api/admin/users/:id/deactivate`（主要管理員）
 - `GET /api/admin/submissions`
 - `POST /api/admin/submissions/:id/approve`
 - `POST /api/admin/submissions/:id/reject`
 
-管理者由 `/admin` 進入；未登入會導向 `/admin/login`。第一次部署完成並套用 `0007` 後，以 `owner` 和 `ADMIN_PASSWORD` 登入即可建立主要管理員，系統會要求立即設定新密碼。新密碼至少 6 個字元，且必須同時包含大小寫英文字母、數字與特殊符號，不可包含空白，最多 128 個字元。主要管理員可新增或停用協作管理者；協作管理者可以審核投稿，但不能管理其他管理員。核准新增地點時可在詳情頁補上 latitude／longitude，核准既有地點則更新對應 location，不會建立重複資料。
+管理者由 `/admin` 進入；未登入會導向 `/admin/login`。第一次部署完成並套用 `0007` 後，以 `owner` 和 `ADMIN_PASSWORD` 登入即可建立主要管理員，系統會要求立即設定新密碼。新密碼至少 6 個字元，且必須同時包含大小寫英文字母、數字與特殊符號，不可包含空白，最多 128 個字元。主要管理員可新增、重設密碼或停用協作管理者；重設後會使該帳號現有工作階段失效，且下次登入必須更新密碼。協作管理者可以審核投稿，但不能管理其他管理員。核准新增地點時可在詳情頁補上 latitude／longitude，核准既有地點則更新對應 location，不會建立重複資料。
 
 投稿流程會在 server side 驗證欄位、長度、網址、Email、投稿類型與 Turnstile token；新增地點也會做 normalize 後的名稱／地址相似檢查。所有新投稿一律由 server 強制寫成 `pending`。批次投稿最多 50 筆、request body 最多 2 MiB；單筆投稿 request body 最多 32 KiB。瀏覽器端的 CSV／JSON 檔案最多 1 MiB，且每個 IP 每小時最多 5 次投稿請求。production 需要有效的 Turnstile token。
 

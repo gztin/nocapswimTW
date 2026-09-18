@@ -6,6 +6,7 @@ import {
   createAdminUser,
   deactivateAdminUser,
   fetchAdminUsers,
+  resetAdminUserPassword,
 } from '../api/client'
 import {
   ADMIN_PASSWORD_MAX_LENGTH,
@@ -203,11 +204,18 @@ export function AdminUserManagementPanel({ user }: { user: AdminUser }) {
   const [collaboratorPassword, setCollaboratorPassword] = useState('')
   const [collaboratorConfirmPassword, setCollaboratorConfirmPassword] = useState('')
   const [createLoading, setCreateLoading] = useState(false)
+  const [resetTargetId, setResetTargetId] = useState<string | null>(null)
+  const [resetPassword, setResetPassword] = useState('')
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetError, setResetError] = useState<string | null>(null)
+  const [usersMessage, setUsersMessage] = useState<string | null>(null)
 
   const loadUsers = useCallback(async () => {
     if (user.role !== 'owner') return
     setUsersLoading(true)
     setUsersError(null)
+    setUsersMessage(null)
     try {
       const result = await fetchAdminUsers()
       setUsers(result.users)
@@ -226,6 +234,7 @@ export function AdminUserManagementPanel({ user }: { user: AdminUser }) {
     event.preventDefault()
     setCreateLoading(true)
     setUsersError(null)
+    setUsersMessage(null)
     try {
       await createAdminUser({
         username,
@@ -245,10 +254,47 @@ export function AdminUserManagementPanel({ user }: { user: AdminUser }) {
     }
   }
 
+  const beginReset = (target: AdminUser) => {
+    if (target.role !== 'admin' || !target.isActive) return
+    setResetTargetId(target.id)
+    setResetPassword('')
+    setResetConfirmPassword('')
+    setResetError(null)
+    setUsersError(null)
+    setUsersMessage(null)
+  }
+
+  const cancelReset = () => {
+    setResetTargetId(null)
+    setResetPassword('')
+    setResetConfirmPassword('')
+    setResetError(null)
+  }
+
+  const submitReset = async (event: React.FormEvent<HTMLFormElement>, target: AdminUser) => {
+    event.preventDefault()
+    if (target.role !== 'admin' || !target.isActive) return
+    setResetLoading(true)
+    setResetError(null)
+    setUsersError(null)
+    setUsersMessage(null)
+    try {
+      await resetAdminUserPassword(target.id, resetPassword, resetConfirmPassword)
+      cancelReset()
+      await loadUsers()
+      setUsersMessage(`已重設「${target.displayName}」的密碼；對方下次登入後需要更新密碼。`)
+    } catch (error) {
+      setResetError(errorMessage(error, '協作管理者密碼重設失敗，請稍後再試。'))
+    } finally {
+      setResetLoading(false)
+    }
+  }
+
   const deactivate = async (target: AdminUser) => {
     if (target.id === user.id || target.role === 'owner' || !target.isActive) return
     if (!window.confirm(`確定要停用「${target.displayName}」的管理權限嗎？`)) return
     setUsersError(null)
+    setUsersMessage(null)
     try {
       await deactivateAdminUser(target.id)
       await loadUsers()
@@ -265,10 +311,11 @@ export function AdminUserManagementPanel({ user }: { user: AdminUser }) {
         <div>
           <p className="eyebrow">帳號管理</p>
           <h2 id="admin-user-management-title">協作管理者</h2>
-          <p className="admin-account-meta">只有主要管理員可以新增或停用協作管理者。</p>
+          <p className="admin-account-meta">只有主要管理員可以新增、重設密碼或停用協作管理者。</p>
         </div>
       </div>
 
+      {usersMessage && <p className="form-success" role="status">{usersMessage}</p>}
       <section className="admin-account-section admin-account-section--management">
         <div className="admin-account-section-heading">
           <UserPlus size={18} aria-hidden="true" />
@@ -324,22 +371,62 @@ export function AdminUserManagementPanel({ user }: { user: AdminUser }) {
         <div className="admin-users-list" aria-live="polite">
           <h3 className="admin-users-list-title">目前管理員</h3>
           {usersLoading ? <p className="muted-text"><LoaderCircle className="spin" size={15} aria-hidden="true" /> 載入管理員清單中...</p> : users.map((adminUser) => (
-            <div className={`admin-user-row${adminUser.isActive ? '' : ' is-inactive'}`} key={adminUser.id}>
-              <div className="admin-user-meta">
-                <strong>{adminUser.displayName}</strong>
-                <span>@{adminUser.username} · {ADMIN_ROLE_LABELS[adminUser.role]}</span>
+            <div className="admin-user-item" key={adminUser.id}>
+              <div className={`admin-user-row${adminUser.isActive ? '' : ' is-inactive'}`}>
+                <div className="admin-user-meta">
+                  <strong>{adminUser.displayName}</strong>
+                  <span>@{adminUser.username} · {ADMIN_ROLE_LABELS[adminUser.role]}</span>
+                </div>
+                <div className="admin-user-actions">
+                  <span className={`admin-user-status${adminUser.isActive ? ' is-active' : ''}`}>
+                    {adminUser.isActive ? '使用中' : '已停用'}
+                  </span>
+                  {adminUser.role === 'admin' && adminUser.isActive && (
+                    <>
+                      <button
+                        className="button button--text"
+                        type="button"
+                        aria-expanded={resetTargetId === adminUser.id}
+                        onClick={() => resetTargetId === adminUser.id ? cancelReset() : beginReset(adminUser)}
+                      >
+                        <KeyRound size={15} aria-hidden="true" />
+                        重設密碼
+                      </button>
+                      <button className="button button--text" type="button" onClick={() => void deactivate(adminUser)}>
+                        <UserRoundX size={15} aria-hidden="true" />
+                        停用
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="admin-user-actions">
-                <span className={`admin-user-status${adminUser.isActive ? ' is-active' : ''}`}>
-                  {adminUser.isActive ? '使用中' : '已停用'}
-                </span>
-                {adminUser.role === 'admin' && adminUser.isActive && (
-                  <button className="button button--text" type="button" onClick={() => void deactivate(adminUser)}>
-                    <UserRoundX size={15} aria-hidden="true" />
-                    停用
-                  </button>
-                )}
-              </div>
+              {resetTargetId === adminUser.id && (
+                <form className="admin-user-reset-form" onSubmit={(event) => void submitReset(event, adminUser)}>
+                  <div className="admin-user-reset-heading">
+                    <h4>重設「{adminUser.displayName}」的密碼</h4>
+                    <p>重設後對方目前的登入會失效，下一次登入需要再更新密碼。</p>
+                  </div>
+                  <PasswordFields password={resetPassword} onChange={setResetPassword} label="新密碼" />
+                  <label className="form-field">
+                    <span>確認新密碼</span>
+                    <input
+                      type="password"
+                      value={resetConfirmPassword}
+                      onChange={(event) => setResetConfirmPassword(event.target.value)}
+                      autoComplete="new-password"
+                      required
+                    />
+                  </label>
+                  {resetError && <p className="form-error" role="alert">{resetError}</p>}
+                  <div className="form-actions">
+                    <button className="button button--text" type="button" onClick={cancelReset} disabled={resetLoading}>取消</button>
+                    <button className="button button--primary" type="submit" disabled={resetLoading}>
+                      {resetLoading ? <LoaderCircle className="spin" size={16} aria-hidden="true" /> : <KeyRound size={16} aria-hidden="true" />}
+                      {resetLoading ? '重設中...' : '確認重設密碼'}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           ))}
         </div>

@@ -121,6 +121,13 @@ export function deactivateAdminUser(id: string) {
   })
 }
 
+export function resetAdminUserPassword(id: string, newPassword: string, confirmPassword: string) {
+  return requestJson<{ ok: true }>(`/api/admin/users/${encodeURIComponent(id)}/password`, {
+    method: 'POST',
+    body: JSON.stringify({ newPassword, confirmPassword }),
+  })
+}
+
 export function fetchAdminSubmissions(status?: SubmissionStatus) {
   const query = status ? `?status=${encodeURIComponent(status)}` : ''
   return requestJson<Submission[]>(`/api/admin/submissions${query}`)
